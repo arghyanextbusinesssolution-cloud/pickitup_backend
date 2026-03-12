@@ -17,6 +17,9 @@ model User {
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
   carrier       Carrier?
+  shipments     Shipment[] @relation("UserShipments")
+  reviewsGiven  Review[]   @relation("ReviewsGiven")
+  reviewsReceived Review[] @relation("ReviewsReceived")
 }
 
 model Carrier {
@@ -25,12 +28,86 @@ model Carrier {
   userId        String    @unique
   user          User      @relation(fields: [userId], references: [id])
   isVerified    Boolean   @default(false)
+  bids          Bid[]
+  bookings      Booking[]
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
+}
+
+model Shipment {
+  id            String    @id @default(uuid())
+  title         String
+  description   String?
+  origin        String
+  destination   String
+  weight        Float?
+  dimensions    String?
+  status        ShipmentStatus @default(PENDING)
+  ownerId       String
+  owner         User      @relation("UserShipments", fields: [ownerId], references: [id])
+  bids          Bid[]
+  booking       Booking?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+model Bid {
+  id            String    @id @default(uuid())
+  amount        Float
+  deliveryDate  DateTime?
+  shipmentId    String
+  shipment      Shipment  @relation(fields: [shipmentId], references: [id])
+  carrierId     String
+  carrier       Carrier   @relation(fields: [carrierId], references: [id])
+  status        BidStatus @default(PENDING)
+  createdAt     DateTime  @default(now())
+}
+
+model Booking {
+  id            String    @id @default(uuid())
+  shipmentId    String    @unique
+  shipment      Shipment  @relation(fields: [shipmentId], references: [id])
+  carrierId     String
+  carrier       Carrier   @relation(fields: [carrierId], references: [id])
+  price         Float
+  status        BookingStatus @default(CONFIRMED)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+model Review {
+  id            String    @id @default(uuid())
+  rating        Int
+  comment       String?
+  fromId        String
+  from          User      @relation("ReviewsGiven", fields: [fromId], references: [id])
+  toId          String
+  to            User      @relation("ReviewsReceived", fields: [toId], references: [id])
+  createdAt     DateTime  @default(now())
 }
 
 enum Role {
   USER
   CARRIER
   ADMIN
+}
+
+enum ShipmentStatus {
+  PENDING
+  BOOKED
+  IN_TRANSIT
+  DELIVERED
+  CANCELLED
+}
+
+enum BidStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+}
+
+enum BookingStatus {
+  CONFIRMED
+  CANCELLED
+  COMPLETED
 }

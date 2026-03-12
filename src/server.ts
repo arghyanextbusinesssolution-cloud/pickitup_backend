@@ -1,15 +1,9 @@
 import app from './app';
+import { env } from './config/env';
 import { logger } from './utils/logger';
 
-const PORT = process.env.PORT || 5000;
+const port = env.PORT;
 
-const server = app.listen(PORT, () => {
-    logger.info(`Server is running on port ${PORT}`);
-});
-
-process.on('SIGTERM', () => {
-    logger.info('SIGTERM signal received: closing HTTP server');
-    server.close(() => {
-        logger.info('HTTP server closed');
-    });
+app.listen(port, () => {
+    logger.info(`Server is running on port ${port}`);
 });

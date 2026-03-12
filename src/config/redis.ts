@@ -1,18 +1,17 @@
 import Redis from 'ioredis';
+import { env } from './env';
 import { logger } from '../utils/logger';
 
-const redisUrl = process.env.REDIS_URL || 'redis://localhost:6379';
-
-const redis = new Redis(redisUrl, {
+export const redisConnection = new Redis(env.REDIS_URL, {
     maxRetriesPerRequest: null,
 });
 
-redis.on('connect', () => {
+redisConnection.on('connect', () => {
     logger.info('Connected to Redis');
 });
 
-redis.on('error', (err) => {
+redisConnection.on('error', (err) => {
     logger.error(err, 'Redis error');
 });
 
-export default redis;
+export default redisConnection;
