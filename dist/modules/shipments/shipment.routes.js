@@ -1,0 +1,16 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const shipment_controller_1 = require("./shipment.controller");
+const auth_middleware_1 = require("../../middlewares/auth.middleware");
+const router = (0, express_1.Router)();
+router.use(auth_middleware_1.authMiddleware);
+router.post('/', shipment_controller_1.shipmentController.create);
+router.get('/my', shipment_controller_1.shipmentController.getMyShipments);
+router.get('/available', shipment_controller_1.shipmentController.getAvailableShipments);
+router.get('/carrier', shipment_controller_1.shipmentController.getCarrierJobs);
+router.get('/', shipment_controller_1.shipmentController.getAll);
+router.get('/:id', shipment_controller_1.shipmentController.getOne);
+router.patch('/:id', shipment_controller_1.shipmentController.update);
+router.delete('/:id', shipment_controller_1.shipmentController.delete);
+exports.default = router;

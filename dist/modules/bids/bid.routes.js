@@ -1,0 +1,11 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const bid_controller_1 = require("./bid.controller");
+const auth_middleware_1 = require("../../middlewares/auth.middleware");
+const router = (0, express_1.Router)();
+router.use(auth_middleware_1.authMiddleware);
+router.post('/', (0, auth_middleware_1.roleMiddleware)(['CARRIER']), bid_controller_1.bidController.create);
+router.get('/shipment/:shipmentId', bid_controller_1.bidController.getShipmentBids);
+router.get('/my', (0, auth_middleware_1.roleMiddleware)(['CARRIER']), bid_controller_1.bidController.getMyBids);
+exports.default = router;

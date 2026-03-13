@@ -3,22 +3,30 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.authMiddleware = void 0;
+exports.roleMiddleware = exports.authMiddleware = void 0;
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
-const logger_1 = require("../utils/logger");
+const env_1 = require("../config/env");
 const authMiddleware = (req, res, next) => {
     const token = req.headers.authorization?.split(' ')[1];
     if (!token) {
-        return res.status(401).json({ message: 'Authentication token is missing' });
+        return res.status(401).json({ error: 'No token provided' });
     }
     try {
-        const decoded = jsonwebtoken_1.default.verify(token, process.env.JWT_SECRET || 'secret');
+        const decoded = jsonwebtoken_1.default.verify(token, env_1.env.JWT_SECRET);
         req.user = decoded;
         next();
     }
     catch (error) {
-        logger_1.logger.error(error, 'Auth error');
-        return res.status(401).json({ message: 'Invalid or expired token' });
+        return res.status(401).json({ error: 'Invalid token' });
     }
 };
 exports.authMiddleware = authMiddleware;
+const roleMiddleware = (roles) => {
+    return (req, res, next) => {
+        if (!req.user || !roles.includes(req.user.role)) {
+            return res.status(403).json({ error: 'Unauthorized' });
+        }
+        next();
+    };
+};
+exports.roleMiddleware = roleMiddleware;

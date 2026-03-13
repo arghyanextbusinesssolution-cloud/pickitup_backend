@@ -1,0 +1,12 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const carrier_controller_1 = require("./carrier.controller");
+const auth_middleware_1 = require("../../middlewares/auth.middleware");
+const router = (0, express_1.Router)();
+router.use(auth_middleware_1.authMiddleware);
+router.use((0, auth_middleware_1.roleMiddleware)(['CARRIER', 'ADMIN']));
+router.get('/profile', carrier_controller_1.carrierController.getProfile);
+router.post('/bid', carrier_controller_1.carrierController.placeBid);
+router.get('/bids', carrier_controller_1.carrierController.getMyBids);
+exports.default = router;
