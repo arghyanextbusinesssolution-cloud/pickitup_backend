@@ -2,3 +2,5 @@ node_modules
 node_modules/
 .env
 shipment-key.pem
+wipe-db
+wipe-db.js
