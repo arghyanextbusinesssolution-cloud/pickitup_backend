@@ -1,0 +1,102 @@
+// =====================
+// 2. CARRIER MANAGEMENT
+// =====================
+
+model Carrier {
+  id           String    @id @default(cuid())
+  userId       String    @unique
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  companyName  String
+  
+  rating       Decimal   @default(0.0) @db.Decimal(3, 2)  
+  totalReviews Int       @default(0)    
+  
+  isVerified   Boolean   @default(false)
+  
+  deletedAt    DateTime? 
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  vehicles        CarrierVehicle[]
+  documents       CarrierDocument[]
+  insurance       CarrierInsurance[]
+  bids            Bid[]
+  bookings        Booking[]
+  driverLocations DriverLocation[]
+  availability    CarrierAvailability[]
+  verifications   CarrierVerification[]
+
+  @@index([isVerified])
+  @@index([userId])
+}
+
+model CarrierVerification {
+  id          String   @id @default(cuid())
+  carrierId   String
+  carrier     Carrier  @relation(fields: [carrierId], references: [id], onDelete: Cascade)
+  status      VerificationStatus @default(PENDING)
+  verifiedAt  DateTime?
+  notes       String?
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  deletedAt   DateTime?
+
+  @@index([carrierId])
+  @@index([status])
+}
+
+model CarrierDocument {
+  id                 String             @id @default(cuid())
+  carrierId          String
+  carrier            Carrier            @relation(fields: [carrierId], references: [id], onDelete: Cascade)
+  documentType       String
+  fileUrl            String
+  fileSize           Int?               
+  mimeType           String?            
+  verificationStatus VerificationStatus @default(PENDING)
+  
+  uploadedAt         DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+  deletedAt          DateTime?
+
+  @@index([carrierId])
+  @@index([verificationStatus])
+}
+
+model CarrierInsurance {
+  id             String   @id @default(cuid())
+  carrierId      String
+  carrier        Carrier  @relation(fields: [carrierId], references: [id], onDelete: Cascade)
+  provider       String
+  policyNumber   String
+  coverageAmount Decimal  @db.Decimal(12, 2)
+  expiryDate     DateTime
+  
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  deletedAt      DateTime?
+
+  @@index([carrierId])
+}
+
+model CarrierAvailability {
+  id          String   @id @default(cuid())
+  carrierId   String
+  carrier     Carrier  @relation(fields: [carrierId], references: [id], onDelete: Cascade)
+  isAvailable Boolean  @default(true)
+  startTime   DateTime?
+  endTime     DateTime?
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  deletedAt   DateTime?
+
+  @@index([carrierId])
+}
+
+enum VerificationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}

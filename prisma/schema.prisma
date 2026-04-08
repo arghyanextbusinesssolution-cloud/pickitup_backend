@@ -1,113 +1,1260 @@
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions"]
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider   = "postgresql"
+  url        = env("DATABASE_URL")
+  extensions = [postgis]
 }
 
-model User {
-  id            String    @id @default(uuid())
-  email         String    @unique
-  password      String
-  firstName     String?
-  lastName      String?
-  role          Role      @default(USER)
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  carrier       Carrier?
-  shipments     Shipment[] @relation("UserShipments")
-  reviewsGiven  Review[]   @relation("ReviewsGiven")
-  reviewsReceived Review[] @relation("ReviewsReceived")
+// =====================
+// 12. ADMIN CONTROLS
+// =====================
+
+model SystemSetting {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     String
+  
+  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now())
 }
 
-model Carrier {
-  id            String    @id @default(uuid())
-  companyName   String
-  userId        String    @unique
-  user          User      @relation(fields: [userId], references: [id])
-  isVerified    Boolean   @default(false)
-  bids          Bid[]
-  bookings      Booking[]
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+model PlatformCommission {
+  id        String   @id @default(cuid())
+  bookingId String
+  amount    Decimal  @db.Decimal(12, 2)
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deletedAt DateTime?
+
+  @@index([bookingId])
+  @@index([createdAt])
 }
 
-model Shipment {
-  id            String    @id @default(uuid())
-  title         String
-  description   String?
-  origin        String
-  destination   String
-  weight        Float?
-  dimensions    String?
-  status        ShipmentStatus @default(PENDING)
-  ownerId       String
-  owner         User      @relation("UserShipments", fields: [ownerId], references: [id])
-  bids          Bid[]
-  booking       Booking?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+model AdminAction {
+  id          String   @id @default(cuid())
+  adminId     String
+  user        User     @relation(fields: [adminId], references: [id], onDelete: Cascade)
+  action      String
+  description String?
+  targetTable String?
+  targetId    String?
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([adminId])
+  @@index([targetTable, targetId])
+  @@index([createdAt])
 }
+
+model FeatureFlag {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  isEnabled   Boolean  @default(false)
+  description String?
+  
+  updatedAt   DateTime @updatedAt
+  createdAt   DateTime @default(now())
+  deletedAt   DateTime?
+
+  @@index([name])
+}
+
+// =====================
+// 18. BUSINESS INTELLIGENCE (BI)
+// =====================
+
+model MetricEvent {
+  id        String   @id @default(cuid())
+  name      String   // e.g., 'SHIPMENT_CREATED', 'BID_ACCEPTED'
+  data      Json?    // Contextual metric data
+  
+  userId    String?
+  source    String?  // e.g., 'Web', 'Mobile'
+  
+  createdAt DateTime @default(now())
+
+  @@index([name])
+  @@index([createdAt])
+  @@index([userId])
+}
+
+// =====================
+// 2. AUTHENTICATION
+// =====================
+
+model UserSession {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String   @unique 
+  ipAddress String?  
+  userAgent String?  
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deletedAt DateTime?
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+model LoginAttempt {
+  id        String   @id @default(cuid())
+  email     String
+  ipAddress String
+  success   Boolean
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([email])
+  @@index([ipAddress])
+  @@index([createdAt])
+}
+
+model PasswordReset {
+  id        String   @id @default(cuid())
+  email     String
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([email])
+}
+
+model EmailVerification {
+  id        String   @id @default(cuid())
+  email     String
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([email])
+}
+
+model RefreshToken {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deletedAt DateTime?
+
+  @@index([userId])
+}
+
+// =====================
+// 4. BIDDING SYSTEM
+// =====================
 
 model Bid {
-  id            String    @id @default(uuid())
-  amount        Float
-  deliveryDate  DateTime?
-  shipmentId    String
-  shipment      Shipment  @relation(fields: [shipmentId], references: [id])
-  carrierId     String
-  carrier       Carrier   @relation(fields: [carrierId], references: [id])
-  status        BidStatus @default(PENDING)
-  createdAt     DateTime  @default(now())
+  id               String    @id @default(cuid())
+  shipmentId       String
+  shipment         Shipment  @relation(fields: [shipmentId], references: [id], onDelete: Cascade)
+  carrierId        String
+  carrier          Carrier   @relation(fields: [carrierId], references: [id], onDelete: Cascade)
+  amount           Decimal   @db.Decimal(12, 2)
+  deliveryEstimate DateTime?
+  message          String?
+  status           BidStatus @default(PENDING)
+  expiresAt        DateTime? 
+  
+  deletedAt        DateTime?      
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  booking          Booking?
+  history          BidHistory[]
+
+  @@unique([shipmentId, carrierId]) 
+  @@index([carrierId])              
+  @@index([shipmentId])
+  @@index([status])
+  @@index([createdAt])
+  @@index([shipmentId, amount])     
+  @@index([shipmentId, status])     
+  @@index([status, expiresAt])      
 }
 
-model Booking {
-  id            String    @id @default(uuid())
-  shipmentId    String    @unique
-  shipment      Shipment  @relation(fields: [shipmentId], references: [id])
-  carrierId     String
-  carrier       Carrier   @relation(fields: [carrierId], references: [id])
-  price         Float
-  status        BookingStatus @default(CONFIRMED)
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-}
+model BidHistory {
+  id        String   @id @default(cuid())
+  bidId     String
+  bid       Bid      @relation(fields: [bidId], references: [id], onDelete: Cascade)
+  amount    Decimal  @db.Decimal(12, 2)
+  status    BidStatus
+  changedAt DateTime @default(now())
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deletedAt DateTime?
 
-model Review {
-  id            String    @id @default(uuid())
-  rating        Int
-  comment       String?
-  fromId        String
-  from          User      @relation("ReviewsGiven", fields: [fromId], references: [id])
-  toId          String
-  to            User      @relation("ReviewsReceived", fields: [toId], references: [id])
-  createdAt     DateTime  @default(now())
-}
-
-enum Role {
-  USER
-  CARRIER
-  ADMIN
-}
-
-enum ShipmentStatus {
-  PENDING
-  BOOKED
-  IN_TRANSIT
-  DELIVERED
-  CANCELLED
+  @@index([bidId])
 }
 
 enum BidStatus {
   PENDING
   ACCEPTED
   REJECTED
+  CANCELLED
+}
+
+// =====================
+// 5. BOOKING SYSTEM
+// =====================
+
+model Booking {
+  id            String        @id @default(cuid())
+  shipmentId    String        @unique
+  shipment      Shipment      @relation(fields: [shipmentId], references: [id], onDelete: Restrict)
+  carrierId     String
+  carrier       Carrier       @relation(fields: [carrierId], references: [id], onDelete: Restrict)
+  bidId         String        @unique
+  bid           Bid           @relation(fields: [bidId], references: [id], onDelete: Restrict)
+  price         Decimal       @db.Decimal(12, 2)
+  status        BookingStatus @default(CONFIRMED)
+  paymentStatus PaymentStatus @default(PENDING)
+  otp           String?
+  deliveryOtp   String?
+  
+  deletedAt     DateTime?     
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  tracking ShipmentTracking[]
+  payments Payment[]
+  disputes Dispute[]
+  history  BookingStatusHistory[]
+
+  @@index([carrierId])
+  @@index([shipmentId])
+  @@index([status])                 
+  @@index([createdAt])
+}
+
+model BookingStatusHistory {
+  id        String        @id @default(cuid())
+  bookingId String
+  booking   Booking       @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  status    BookingStatus
+  changedAt DateTime      @default(now())
+  
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+  deletedAt DateTime?
+
+  @@index([bookingId])
+  @@index([status])
 }
 
 enum BookingStatus {
   CONFIRMED
-  CANCELLED
+  IN_TRANSIT
   COMPLETED
+  CANCELLED
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  REFUNDED
+  FAILED
+}
+
+// =====================
+// 2. CARRIER MANAGEMENT
+// =====================
+
+model Carrier {
+  id           String    @id @default(cuid())
+  userId       String    @unique
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  companyName  String
+  
+  rating       Decimal   @default(0.0) @db.Decimal(3, 2)  
+  totalReviews Int       @default(0)    
+  
+  isVerified   Boolean   @default(false)
+  
+  deletedAt    DateTime? 
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  vehicles        CarrierVehicle[]
+  documents       CarrierDocument[]
+  insurance       CarrierInsurance[]
+  bids            Bid[]
+  bookings        Booking[]
+  driverLocations DriverLocation[]
+  availability    CarrierAvailability[]
+  verifications   CarrierVerification[]
+
+  @@index([isVerified])
+  @@index([userId])
+}
+
+model CarrierVerification {
+  id          String   @id @default(cuid())
+  carrierId   String
+  carrier     Carrier  @relation(fields: [carrierId], references: [id], onDelete: Cascade)
+  status      VerificationStatus @default(PENDING)
+  verifiedAt  DateTime?
+  notes       String?
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  deletedAt   DateTime?
+
+  @@index([carrierId])
+  @@index([status])
+}
+
+model CarrierDocument {
+  id                 String             @id @default(cuid())
+  carrierId          String
+  carrier            Carrier            @relation(fields: [carrierId], references: [id], onDelete: Cascade)
+  documentType       String
+  fileUrl            String
+  fileSize           Int?               
+  mimeType           String?            
+  verificationStatus VerificationStatus @default(PENDING)
+  
+  uploadedAt         DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+  deletedAt          DateTime?
+
+  @@index([carrierId])
+  @@index([verificationStatus])
+}
+
+model CarrierInsurance {
+  id             String   @id @default(cuid())
+  carrierId      String
+  carrier        Carrier  @relation(fields: [carrierId], references: [id], onDelete: Cascade)
+  provider       String
+  policyNumber   String
+  coverageAmount Decimal  @db.Decimal(12, 2)
+  expiryDate     DateTime
+  
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  deletedAt      DateTime?
+
+  @@index([carrierId])
+}
+
+model CarrierAvailability {
+  id          String   @id @default(cuid())
+  carrierId   String
+  carrier     Carrier  @relation(fields: [carrierId], references: [id], onDelete: Cascade)
+  isAvailable Boolean  @default(true)
+  startTime   DateTime?
+  endTime     DateTime?
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  deletedAt   DateTime?
+
+  @@index([carrierId])
+}
+
+enum VerificationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+// =====================
+// 11. DISPUTE MANAGEMENT
+// =====================
+
+model Dispute {
+  id         String        @id @default(cuid())
+  bookingId  String
+  booking    Booking       @relation(fields: [bookingId], references: [id], onDelete: Restrict)
+  raisedById String
+  raisedBy   User          @relation(fields: [raisedById], references: [id], onDelete: Restrict)
+  reason     String
+  status     DisputeStatus @default(OPEN)
+  
+  messages   DisputeMessage[]
+  attachments DisputeAttachment[]
+
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
+  deletedAt  DateTime?
+
+  @@index([bookingId])
+  @@index([raisedById])
+  @@index([status])
+}
+
+enum DisputeStatus {
+  OPEN
+  UNDER_REVIEW
+  RESOLVED
+  CLOSED
+}
+
+model DisputeMessage {
+  id        String   @id @default(cuid())
+  disputeId String
+  dispute   Dispute  @relation(fields: [disputeId], references: [id], onDelete: Cascade)
+  senderId  String
+  sender    User     @relation(fields: [senderId], references: [id], onDelete: Restrict)
+  message   String
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deletedAt DateTime?
+
+  @@index([disputeId, createdAt]) 
+  @@index([senderId])
+}
+
+model DisputeAttachment {
+  id          String   @id @default(cuid())
+  disputeId   String
+  dispute     Dispute  @relation(fields: [disputeId], references: [id], onDelete: Cascade)
+  fileUrl     String
+  fileName    String?
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  deletedAt   DateTime?
+
+  @@index([disputeId])
+}
+
+// =====================
+// 16. DOCUMENT STORAGE
+// =====================
+
+model FileUpload {
+  id           String   @id @default(cuid())
+  url          String   @unique
+  fileType     String   // e.g., 'PDF', 'JPG'
+  fileSize     Int      // In bytes
+  mimeType     String?
+  
+  uploadedById String
+  uploadedBy   User     @relation(fields: [uploadedById], references: [id], onDelete: Restrict)
+
+  // Context tags
+  refTable     String?  // e.g., 'Carrier', 'Shipment'
+  refId        String?  // e.g., carrierId
+  
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  deletedAt    DateTime?
+
+  @@index([uploadedById])
+  @@index([refTable, refId])
+}
+
+// =====================
+// 15. LOCATION & GIS
+// =====================
+
+model GeoLocation {
+  id        String   @id @default(cuid())
+  latitude  Float
+  longitude Float
+  address   String?  // Human-readable from Geocoding API
+  plusCode  String?  // Google Maps Plus Code support
+  
+  placeId   String?  // Google Maps unique Place ID
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deletedAt DateTime? // Archival
+
+  @@index([latitude, longitude])
+  @@index([placeId])
+}
+
+// =====================
+// 13. SYSTEM LOGGING
+// =====================
+
+model ActivityLog {
+  id        String   @id @default(cuid())
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  action    String
+  metadata  Json?
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([action])
+  @@index([createdAt])
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  tableName String
+  recordId  String
+  action    String
+  userId    String?  
+  oldValue  Json?
+  newValue  Json?
+  ipAddress String?
+  userAgent String?
+  
+  changedAt DateTime @default(now())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([tableName, recordId])
+  @@index([userId])
+  @@index([changedAt])
+}
+
+model BackgroundJob {
+  id          String    @id @default(cuid())
+  jobType     String
+  status      String
+  payload     Json
+  
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  processedAt DateTime?
+
+  @@index([status])
+  @@index([jobType])
+  @@index([createdAt])
+}
+
+model ErrorLog {
+  id        String   @id @default(cuid())
+  message   String
+  stack     String?
+  context   Json?
+  userId    String?
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([createdAt])
+  @@index([userId])
+}
+
+// =====================
+// 7. MESSAGING SYSTEM
+// =====================
+
+model Conversation {
+  id         String   @id @default(cuid())
+  shipmentId String
+  shipment   Shipment @relation(fields: [shipmentId], references: [id], onDelete: Cascade)
+  
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  deletedAt  DateTime?
+
+  participants ConversationParticipant[]
+  messages     Message[]
+
+  @@index([shipmentId])
+}
+
+model ConversationParticipant {
+  id             String       @id @default(cuid())
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  userId         String
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  @@unique([conversationId, userId])
+  @@index([userId])
+}
+
+model Message {
+  id             String       @id @default(cuid())
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  senderId       String
+  sender         User         @relation(fields: [senderId], references: [id], onDelete: Restrict)
+  messageText    String
+  
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  deletedAt      DateTime?
+
+  attachments    Attachment[]
+
+  @@index([conversationId, createdAt]) 
+  @@index([senderId])
+}
+
+model Attachment {
+  id        String   @id @default(cuid())
+  messageId String
+  message   Message  @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  fileUrl   String
+  fileName  String?
+  fileSize  Int?
+  mimeType  String?
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deletedAt DateTime?
+
+  @@index([messageId])
+}
+
+// =====================
+// 9. NOTIFICATION SYSTEM
+// =====================
+
+model Notification {
+  id        String           @id @default(cuid())
+  userId    String
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      NotificationType 
+  title     String
+  message   String
+  isRead    Boolean          @default(false)
+  
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+  deletedAt DateTime?
+
+  @@index([userId])
+  @@index([userId, isRead]) 
+}
+
+model NotificationPreference {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  email     Boolean  @default(true)
+  push      Boolean  @default(true)
+  sms       Boolean  @default(false)
+  
+  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now())
+}
+
+enum NotificationType {
+  BID_RECEIVED
+  BID_ACCEPTED
+  BID_REJECTED
+  SHIPMENT_UPDATE
+  PAYMENT_RECEIVED
+  DISPUTE_OPENED
+  SYSTEM
+}
+
+// =====================
+// 8. PAYMENT SYSTEM
+// =====================
+
+model Payment {
+  id                String        @id @default(cuid())
+  bookingId         String
+  booking           Booking       @relation(fields: [bookingId], references: [id], onDelete: Restrict)
+  payerId           String
+  payer             User          @relation(fields: [payerId], references: [id], onDelete: Restrict)
+  amount            Decimal       @db.Decimal(12, 2)
+  currency          String        @default("USD")
+  status            PaymentStatus @default(PENDING)
+  method            PaymentMethod
+  gatewayPaymentId  String?       
+  gatewayCustomerId String?
+  
+  deletedAt         DateTime?     
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+
+  transactions Transaction[]
+  refunds      Refund[]
+  payouts      Payout[]
+  invoices     Invoice[]
+
+  @@index([bookingId])
+  @@index([payerId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model Transaction {
+  id                   String            @id @default(cuid())
+  paymentId            String
+  payment              Payment           @relation(fields: [paymentId], references: [id], onDelete: Cascade)
+  gatewayTransactionId String
+  status               TransactionStatus 
+  
+  createdAt            DateTime          @default(now())
+  updatedAt            DateTime          @updatedAt
+  deletedAt            DateTime?
+
+  @@index([paymentId])
+  @@index([status])
+}
+
+model Refund {
+  id        String       @id @default(cuid())
+  paymentId String
+  payment   Payment      @relation(fields: [paymentId], references: [id], onDelete: Cascade)
+  amount    Decimal      @db.Decimal(12, 2)
+  reason    String?
+  status    RefundStatus 
+  
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+  deletedAt DateTime?
+
+  @@index([paymentId])
+  @@index([status])
+}
+
+model Payout {
+  id          String   @id @default(cuid())
+  paymentId   String
+  payment     Payment  @relation(fields: [paymentId], references: [id], onDelete: Cascade)
+  carrierId   String
+  amount      Decimal  @db.Decimal(12, 2)
+  status      String
+  processedAt DateTime?
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  deletedAt   DateTime?
+
+  @@index([paymentId])
+  @@index([carrierId])
+  @@index([status])
+}
+
+model Invoice {
+  id          String   @id @default(cuid())
+  paymentId   String
+  payment     Payment  @relation(fields: [paymentId], references: [id], onDelete: Cascade)
+  invoiceNumber String   @unique
+  fileUrl     String
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  deletedAt   DateTime?
+
+  @@index([paymentId])
+  @@index([invoiceNumber])
+}
+
+enum PaymentMethod {
+  CREDIT_CARD
+  DEBIT_CARD
+  BANK_TRANSFER
+  STRIPE
+  PAYPAL
+  CASH
+}
+
+enum TransactionStatus {
+  INITIATED
+  SUCCESS
+  FAILED
+}
+
+enum RefundStatus {
+  REQUESTED
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
+// =====================
+// 17. REVENUE ENGINE & PRICING
+// =====================
+
+model PricingRule {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  
+  basePrice   Decimal  @db.Decimal(12, 2)
+  pricePerKm  Decimal  @db.Decimal(12, 2)
+  pricePerKg  Decimal  @db.Decimal(12, 2)
+  
+  minWeight   Float?
+  maxWeight   Float?
+  
+  isActive    Boolean  @default(true)
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  deletedAt   DateTime?
+
+  @@index([isActive])
+}
+
+// =====================
+// 19. TASK & QUEUE SCALING
+// =====================
+
+model JobQueue {
+  id        String   @id @default(cuid())
+  type      String   // e.g., 'EMAIL_DISPATCH', 'S3_CLEANUP'
+  status    JobStatus @default(PENDING)
+  
+  payload   Json     // Input data
+  result    Json?    // Outcome
+  
+  error     String?  // Last failure message
+  attempts  Int      @default(0)
+  maxAttempts Int    @default(3)
+  
+  runAfter  DateTime @default(now())
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  processedAt DateTime?
+
+  @@index([status])
+  @@index([runAfter])
+}
+
+enum JobStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+  CANCELLED
+}
+
+// =====================
+// 10. REVIEW SYSTEM
+// =====================
+
+model Review {
+  id         String   @id @default(cuid())
+  fromUserId String
+  fromUser   User     @relation("ReviewsGiven", fields: [fromUserId], references: [id], onDelete: Restrict)
+  toUserId   String
+  toUser     User     @relation("ReviewsReceived", fields: [toUserId], references: [id], onDelete: Restrict)
+  shipmentId String
+  shipment   Shipment @relation(fields: [shipmentId], references: [id], onDelete: Cascade)
+  rating     Int
+  comment    String?
+  
+  responses  ReviewResponse[]
+
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  deletedAt  DateTime?
+
+  @@index([toUserId])
+  @@index([fromUserId])
+  @@index([shipmentId])
+  @@index([rating])
+  @@unique([fromUserId, toUserId, shipmentId]) 
+}
+
+model ReviewResponse {
+  id        String   @id @default(cuid())
+  reviewId  String
+  review    Review   @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Restrict)
+  comment   String
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deletedAt DateTime?
+
+  @@index([reviewId])
+  @@index([userId])
+}
+
+// =====================
+// 3. SHIPMENT MARKETPLACE
+// =====================
+
+model Shipment {
+  id                   String         @id @default(cuid())
+  title                String
+  description          String?
+
+  ownerId              String
+  owner                User           @relation("UserShipments", fields: [ownerId], references: [id], onDelete: Restrict)
+
+  status               ShipmentStatus @default(OPEN)
+
+  // =====================
+  // 📍 ORIGIN (UPDATED)
+  // =====================
+  originAddress        String
+  originLatitude       Float
+  originLongitude      Float
+  originPlaceId        String?   
+
+  originCity           String?   
+  originState          String?   
+  originCountry        String?   
+  originPostalCode     String?   
+
+  // =====================
+  // 📍 DESTINATION (UPDATED)
+  // =====================
+  destinationAddress   String
+  destinationLatitude  Float
+  destinationLongitude Float
+  destinationPlaceId   String?   
+
+  destinationCity      String?   
+  destinationState     String?   
+  destinationCountry   String?   
+  destinationPostalCode String?  
+
+  // =====================
+  // 🚚 DISTANCE (KEEP)
+  // =====================
+  distanceKm           Float?
+  estimatedTimeMin     Int?
+
+  // =====================
+  // 📦 SHIPMENT DETAILS (IMPROVED)
+  // =====================
+  category             String?   
+
+  weight               Float?
+  weightUnit           String @default("kg")  
+
+  length               Float?   
+  width                Float?   
+  height               Float?   
+  dimensionUnit        String @default("cm")  
+
+  // =====================
+  // 📅 DATES (IMPROVED)
+  // =====================
+  pickupDate           DateTime?
+  deliveryDate         DateTime?
+
+  isFlexiblePickup     Boolean @default(false)   
+  isFlexibleDelivery   Boolean @default(false)   
+
+  // =====================
+  // 💰 PRICING (IMPROVED)
+  // =====================
+  budgetMin            Decimal? @db.Decimal(12, 2)  
+  budgetMax            Decimal? @db.Decimal(12, 2)  
+
+  estimatedPrice       Decimal? @db.Decimal(12, 2)
+  finalPrice           Decimal? @db.Decimal(12, 2)
+
+  // =====================
+  // 🚪 LOGISTICS (NEW)
+  // =====================
+  pickupType           LocationType @default(RESIDENTIAL)   
+  deliveryType         LocationType @default(RESIDENTIAL)   
+
+  pickupNotes          String?   
+  deliveryNotes        String?   
+
+  hasElevatorPickup    Boolean?  
+  hasElevatorDelivery  Boolean?  
+
+  pickupFloor          Int?      
+  deliveryFloor        Int?      
+
+  // =====================
+  // 🧾 EXTRA (OPTIONAL BUT GOOD)
+  // =====================
+  specialRequirements  String?   
+  isPalletized         Boolean @default(false)  
+  isCrated             Boolean @default(false)  
+
+  // =====================
+  // SYSTEM
+  // =====================
+  deletedAt            DateTime?
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  // =====================
+  // RELATIONS (KEEP)
+  // =====================
+  items         ShipmentItem[]
+  images        ShipmentImage[]
+  bids          Bid[]
+  booking       Booking?
+  conversations Conversation[]
+  reviews       Review[]
+  stops         ShipmentStop[]
+  documents     ShipmentDocument[]
+
+  @@index([ownerId])
+  @@index([status])
+  @@index([createdAt])
+  @@index([status, createdAt])        
+  @@index([originLatitude, originLongitude])   
+  @@index([destinationLatitude, destinationLongitude]) 
+}
+
+model ShipmentItem {
+  id         String   @id @default(cuid())
+  shipmentId String
+  shipment   Shipment @relation(fields: [shipmentId], references: [id], onDelete: Cascade)
+  name       String
+  quantity   Int      @default(1)
+  weight     Float?
+  dimensions String?
+
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  deletedAt  DateTime?
+
+  @@index([shipmentId])
+}
+
+model ShipmentImage {
+  id         String   @id @default(cuid())
+  shipmentId String
+  shipment   Shipment @relation(fields: [shipmentId], references: [id], onDelete: Cascade)
+  imageUrl   String
+  fileSize   Int?               
+  mimeType   String?            
+  uploadedBy String?            
+  uploadedAt DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  deletedAt  DateTime?
+
+  @@index([shipmentId])
+}
+
+model ShipmentStop {
+  id         String   @id @default(cuid())
+  shipmentId String
+  shipment   Shipment @relation(fields: [shipmentId], references: [id], onDelete: Cascade)
+  address    String
+  latitude   Float
+  longitude  Float
+  placeId    String?  // Google Places ID
+  stopOrder  Int      @default(1)
+  stopType   StopType @default(PICKUP)
+  
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  deletedAt  DateTime?
+
+  @@index([shipmentId])
+}
+
+enum StopType {
+  PICKUP
+  DELIVERY
+  REST_STOP
+}
+
+model ShipmentDocument {
+  id           String   @id @default(cuid())
+  shipmentId   String
+  shipment     Shipment @relation(fields: [shipmentId], references: [id], onDelete: Cascade)
+  documentType String
+  fileUrl      String
+  
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  deletedAt    DateTime?
+
+  @@index([shipmentId])
+}
+
+enum ShipmentStatus {
+  OPEN
+  ASSIGNED
+  IN_TRANSIT
+  DELIVERED
+  CANCELLED
+}
+
+enum LocationType {
+  RESIDENTIAL
+  BUSINESS
+  WAREHOUSE
+  PORT
+}
+
+
+// =====================
+// 6. SHIPMENT TRACKING
+// =====================
+
+model ShipmentTracking {
+  id                String         @id @default(cuid())
+  bookingId         String
+  booking           Booking        @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  status            TrackingStatus
+  locationLatitude  Float?
+  locationLongitude Float?
+  notes             String?
+  timestamp         DateTime       @default(now())
+
+  events            TrackingEvent[]
+
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+  deletedAt         DateTime?
+
+  @@index([bookingId, timestamp]) 
+}
+
+model TrackingEvent {
+  id                 String           @id @default(cuid())
+  trackingId         String
+  tracking           ShipmentTracking @relation(fields: [trackingId], references: [id], onDelete: Cascade)
+  eventType          String
+  eventDescription   String?
+  
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
+  deletedAt          DateTime?
+
+  @@index([trackingId])
+  @@index([createdAt])
+}
+
+model DriverLocation {
+  id        String   @id @default(cuid())
+  carrierId String
+  carrier   Carrier  @relation(fields: [carrierId], references: [id], onDelete: Cascade)
+  latitude  Float
+  longitude Float
+  timestamp DateTime @default(now())
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deletedAt DateTime?
+
+  @@index([carrierId])
+  @@index([timestamp]) 
+}
+
+enum TrackingStatus {
+  PICKED_UP
+  IN_TRANSIT
+  OUT_FOR_DELIVERY
+  DELIVERED
+  FAILED
+}
+
+// =====================
+// 1. USER MANAGEMENT
+// =====================
+
+model User {
+  id           String    @id @default(cuid())
+  email        String    @unique
+  passwordHash String    
+  firstName    String?
+  lastName     String?
+  phone        String?   @unique
+  role         Role      @default(SHIPPER)
+  isVerified   Boolean   @default(false)
+
+  // Security Hardening
+  failedLoginAttempts Int      @default(0)
+  lockedUntil         DateTime?
+  twoFactorEnabled    Boolean  @default(false)
+  twoFactorSecret     String?  // For TOTP/Google Authenticator
+  
+  deletedAt    DateTime? 
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  // Relations
+  sessions        UserSession[]
+  refreshTokens   RefreshToken[]
+  addresses       UserAddress[]
+  carrier         Carrier?
+  shipments       Shipment[]                @relation("UserShipments")
+  reviewsGiven    Review[]                  @relation("ReviewsGiven")
+  reviewsReceived Review[]                  @relation("ReviewsReceived")
+  reviewResponses ReviewResponse[]
+  conversations   ConversationParticipant[]
+  messagesSent    Message[]
+  paymentsMade    Payment[]
+  notifications   Notification[]
+  notificationPreferences NotificationPreference?
+  disputesRaised  Dispute[]
+  disputeMessages DisputeMessage[]
+  activityLogs    ActivityLog[]
+  adminActions    AdminAction[]
+  uploadedFiles   FileUpload[]
+
+  @@index([email])
+  @@index([role])
+}
+
+model UserAddress {
+  id           String   @id @default(cuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  addressLine1 String
+  addressLine2 String?
+  city         String
+  state        String
+  country      String
+  postalCode   String
+  latitude     Float?   
+  longitude    Float?   
+
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  deletedAt    DateTime?
+
+  @@index([userId])
+}
+
+enum Role {
+  SHIPPER
+  CARRIER
+  ADMIN
+}
+
+// =====================
+// 2. VEHICLE MANAGEMENT
+// =====================
+
+model CarrierVehicle {
+  id             String   @id @default(cuid())
+  carrierId      String
+  carrier        Carrier  @relation(fields: [carrierId], references: [id], onDelete: Cascade)
+  vehicleType    String
+  capacityWeight Float?
+  capacityVolume Float?
+  plateNumber    String   @unique 
+
+  vehicleInfo    VehicleType? @relation(fields: [vehicleType], references: [name])
+
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  deletedAt      DateTime?
+
+  @@index([carrierId])
+  @@index([vehicleType])
+}
+
+model VehicleType {
+  name        String   @id
+  description String?
+  vehicles    CarrierVehicle[]
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  deletedAt   DateTime?
 }

@@ -1,0 +1,73 @@
+// =====================
+// 1. USER MANAGEMENT
+// =====================
+
+model User {
+  id           String    @id @default(cuid())
+  email        String    @unique
+  passwordHash String    
+  firstName    String?
+  lastName     String?
+  phone        String?   @unique
+  role         Role      @default(SHIPPER)
+  isVerified   Boolean   @default(false)
+
+  // Security Hardening
+  failedLoginAttempts Int      @default(0)
+  lockedUntil         DateTime?
+  twoFactorEnabled    Boolean  @default(false)
+  twoFactorSecret     String?  // For TOTP/Google Authenticator
+  
+  deletedAt    DateTime? 
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  // Relations
+  sessions        UserSession[]
+  refreshTokens   RefreshToken[]
+  addresses       UserAddress[]
+  carrier         Carrier?
+  shipments       Shipment[]                @relation("UserShipments")
+  reviewsGiven    Review[]                  @relation("ReviewsGiven")
+  reviewsReceived Review[]                  @relation("ReviewsReceived")
+  reviewResponses ReviewResponse[]
+  conversations   ConversationParticipant[]
+  messagesSent    Message[]
+  paymentsMade    Payment[]
+  notifications   Notification[]
+  notificationPreferences NotificationPreference?
+  disputesRaised  Dispute[]
+  disputeMessages DisputeMessage[]
+  activityLogs    ActivityLog[]
+  adminActions    AdminAction[]
+  uploadedFiles   FileUpload[]
+
+  @@index([email])
+  @@index([role])
+}
+
+model UserAddress {
+  id           String   @id @default(cuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  addressLine1 String
+  addressLine2 String?
+  city         String
+  state        String
+  country      String
+  postalCode   String
+  latitude     Float?   
+  longitude    Float?   
+
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  deletedAt    DateTime?
+
+  @@index([userId])
+}
+
+enum Role {
+  SHIPPER
+  CARRIER
+  ADMIN
+}

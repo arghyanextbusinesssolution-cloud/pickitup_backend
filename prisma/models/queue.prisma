@@ -1,0 +1,33 @@
+// =====================
+// 19. TASK & QUEUE SCALING
+// =====================
+
+model JobQueue {
+  id        String   @id @default(cuid())
+  type      String   // e.g., 'EMAIL_DISPATCH', 'S3_CLEANUP'
+  status    JobStatus @default(PENDING)
+  
+  payload   Json     // Input data
+  result    Json?    // Outcome
+  
+  error     String?  // Last failure message
+  attempts  Int      @default(0)
+  maxAttempts Int    @default(3)
+  
+  runAfter  DateTime @default(now())
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  processedAt DateTime?
+
+  @@index([status])
+  @@index([runAfter])
+}
+
+enum JobStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+  CANCELLED
+}

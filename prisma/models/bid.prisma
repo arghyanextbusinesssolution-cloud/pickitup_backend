@@ -1,0 +1,54 @@
+// =====================
+// 4. BIDDING SYSTEM
+// =====================
+
+model Bid {
+  id               String    @id @default(cuid())
+  shipmentId       String
+  shipment         Shipment  @relation(fields: [shipmentId], references: [id], onDelete: Cascade)
+  carrierId        String
+  carrier          Carrier   @relation(fields: [carrierId], references: [id], onDelete: Cascade)
+  amount           Decimal   @db.Decimal(12, 2)
+  deliveryEstimate DateTime?
+  message          String?
+  status           BidStatus @default(PENDING)
+  expiresAt        DateTime? 
+  
+  deletedAt        DateTime?      
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  booking          Booking?
+  history          BidHistory[]
+
+  @@unique([shipmentId, carrierId]) 
+  @@index([carrierId])              
+  @@index([shipmentId])
+  @@index([status])
+  @@index([createdAt])
+  @@index([shipmentId, amount])     
+  @@index([shipmentId, status])     
+  @@index([status, expiresAt])      
+}
+
+model BidHistory {
+  id        String   @id @default(cuid())
+  bidId     String
+  bid       Bid      @relation(fields: [bidId], references: [id], onDelete: Cascade)
+  amount    Decimal  @db.Decimal(12, 2)
+  status    BidStatus
+  changedAt DateTime @default(now())
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deletedAt DateTime?
+
+  @@index([bidId])
+}
+
+enum BidStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+  CANCELLED
+}

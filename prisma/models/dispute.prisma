@@ -1,0 +1,61 @@
+// =====================
+// 11. DISPUTE MANAGEMENT
+// =====================
+
+model Dispute {
+  id         String        @id @default(cuid())
+  bookingId  String
+  booking    Booking       @relation(fields: [bookingId], references: [id], onDelete: Restrict)
+  raisedById String
+  raisedBy   User          @relation(fields: [raisedById], references: [id], onDelete: Restrict)
+  reason     String
+  status     DisputeStatus @default(OPEN)
+  
+  messages   DisputeMessage[]
+  attachments DisputeAttachment[]
+
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
+  deletedAt  DateTime?
+
+  @@index([bookingId])
+  @@index([raisedById])
+  @@index([status])
+}
+
+enum DisputeStatus {
+  OPEN
+  UNDER_REVIEW
+  RESOLVED
+  CLOSED
+}
+
+model DisputeMessage {
+  id        String   @id @default(cuid())
+  disputeId String
+  dispute   Dispute  @relation(fields: [disputeId], references: [id], onDelete: Cascade)
+  senderId  String
+  sender    User     @relation(fields: [senderId], references: [id], onDelete: Restrict)
+  message   String
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deletedAt DateTime?
+
+  @@index([disputeId, createdAt]) 
+  @@index([senderId])
+}
+
+model DisputeAttachment {
+  id          String   @id @default(cuid())
+  disputeId   String
+  dispute     Dispute  @relation(fields: [disputeId], references: [id], onDelete: Cascade)
+  fileUrl     String
+  fileName    String?
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  deletedAt   DateTime?
+
+  @@index([disputeId])
+}

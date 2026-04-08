@@ -1,0 +1,61 @@
+// =====================
+// 5. BOOKING SYSTEM
+// =====================
+
+model Booking {
+  id            String        @id @default(cuid())
+  shipmentId    String        @unique
+  shipment      Shipment      @relation(fields: [shipmentId], references: [id], onDelete: Restrict)
+  carrierId     String
+  carrier       Carrier       @relation(fields: [carrierId], references: [id], onDelete: Restrict)
+  bidId         String        @unique
+  bid           Bid           @relation(fields: [bidId], references: [id], onDelete: Restrict)
+  price         Decimal       @db.Decimal(12, 2)
+  status        BookingStatus @default(CONFIRMED)
+  paymentStatus PaymentStatus @default(PENDING)
+  otp           String?
+  deliveryOtp   String?
+  
+  deletedAt     DateTime?     
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  tracking ShipmentTracking[]
+  payments Payment[]
+  disputes Dispute[]
+  history  BookingStatusHistory[]
+
+  @@index([carrierId])
+  @@index([shipmentId])
+  @@index([status])                 
+  @@index([createdAt])
+}
+
+model BookingStatusHistory {
+  id        String        @id @default(cuid())
+  bookingId String
+  booking   Booking       @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  status    BookingStatus
+  changedAt DateTime      @default(now())
+  
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+  deletedAt DateTime?
+
+  @@index([bookingId])
+  @@index([status])
+}
+
+enum BookingStatus {
+  CONFIRMED
+  IN_TRANSIT
+  COMPLETED
+  CANCELLED
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  REFUNDED
+  FAILED
+}

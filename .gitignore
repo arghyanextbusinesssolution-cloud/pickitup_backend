@@ -4,3 +4,4 @@ node_modules/
 shipment-key.pem
 wipe-db
 wipe-db.js
+generator_client.txt

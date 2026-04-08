@@ -1,0 +1,18 @@
+// =====================
+// 18. BUSINESS INTELLIGENCE (BI)
+// =====================
+
+model MetricEvent {
+  id        String   @id @default(cuid())
+  name      String   // e.g., 'SHIPMENT_CREATED', 'BID_ACCEPTED'
+  data      Json?    // Contextual metric data
+  
+  userId    String?
+  source    String?  // e.g., 'Web', 'Mobile'
+  
+  createdAt DateTime @default(now())
+
+  @@index([name])
+  @@index([createdAt])
+  @@index([userId])
+}

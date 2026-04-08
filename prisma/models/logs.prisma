@@ -1,0 +1,67 @@
+// =====================
+// 13. SYSTEM LOGGING
+// =====================
+
+model ActivityLog {
+  id        String   @id @default(cuid())
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  action    String
+  metadata  Json?
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([action])
+  @@index([createdAt])
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  tableName String
+  recordId  String
+  action    String
+  userId    String?  
+  oldValue  Json?
+  newValue  Json?
+  ipAddress String?
+  userAgent String?
+  
+  changedAt DateTime @default(now())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([tableName, recordId])
+  @@index([userId])
+  @@index([changedAt])
+}
+
+model BackgroundJob {
+  id          String    @id @default(cuid())
+  jobType     String
+  status      String
+  payload     Json
+  
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  processedAt DateTime?
+
+  @@index([status])
+  @@index([jobType])
+  @@index([createdAt])
+}
+
+model ErrorLog {
+  id        String   @id @default(cuid())
+  message   String
+  stack     String?
+  context   Json?
+  userId    String?
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([createdAt])
+  @@index([userId])
+}

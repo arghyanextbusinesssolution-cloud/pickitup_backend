@@ -1,0 +1,61 @@
+// =====================
+// 6. SHIPMENT TRACKING
+// =====================
+
+model ShipmentTracking {
+  id                String         @id @default(cuid())
+  bookingId         String
+  booking           Booking        @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  status            TrackingStatus
+  locationLatitude  Float?
+  locationLongitude Float?
+  notes             String?
+  timestamp         DateTime       @default(now())
+
+  events            TrackingEvent[]
+
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+  deletedAt         DateTime?
+
+  @@index([bookingId, timestamp]) 
+}
+
+model TrackingEvent {
+  id                 String           @id @default(cuid())
+  trackingId         String
+  tracking           ShipmentTracking @relation(fields: [trackingId], references: [id], onDelete: Cascade)
+  eventType          String
+  eventDescription   String?
+  
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
+  deletedAt          DateTime?
+
+  @@index([trackingId])
+  @@index([createdAt])
+}
+
+model DriverLocation {
+  id        String   @id @default(cuid())
+  carrierId String
+  carrier   Carrier  @relation(fields: [carrierId], references: [id], onDelete: Cascade)
+  latitude  Float
+  longitude Float
+  timestamp DateTime @default(now())
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deletedAt DateTime?
+
+  @@index([carrierId])
+  @@index([timestamp]) 
+}
+
+enum TrackingStatus {
+  PICKED_UP
+  IN_TRANSIT
+  OUT_FOR_DELIVERY
+  DELIVERED
+  FAILED
+}

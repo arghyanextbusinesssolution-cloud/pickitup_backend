@@ -1,0 +1,25 @@
+// =====================
+// 16. DOCUMENT STORAGE
+// =====================
+
+model FileUpload {
+  id           String   @id @default(cuid())
+  url          String   @unique
+  fileType     String   // e.g., 'PDF', 'JPG'
+  fileSize     Int      // In bytes
+  mimeType     String?
+  
+  uploadedById String
+  uploadedBy   User     @relation(fields: [uploadedById], references: [id], onDelete: Restrict)
+
+  // Context tags
+  refTable     String?  // e.g., 'Carrier', 'Shipment'
+  refId        String?  // e.g., carrierId
+  
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  deletedAt    DateTime?
+
+  @@index([uploadedById])
+  @@index([refTable, refId])
+}

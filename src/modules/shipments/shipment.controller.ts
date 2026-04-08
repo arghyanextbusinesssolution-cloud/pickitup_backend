@@ -1,22 +1,33 @@
 import { Response } from 'express';
 import { AuthRequest } from '../../middlewares/auth.middleware';
 import { ShipmentService } from './shipment.service';
+import { CreateShipmentSchema, UpdateShipmentSchema } from './shipment.types';
 
 const shipmentService = new ShipmentService();
 
 export class ShipmentController {
     async create(req: AuthRequest, res: Response) {
         try {
-            const result = await shipmentService.create(req.body, req.user!.userId);
+            console.log("[Shipment Controller] Validate creation for:", req.user!.email);
+            
+            // Validate input
+            const validatedData = CreateShipmentSchema.parse(req.body);
+            
+            const result = await shipmentService.create(validatedData, req.user!.id);
             res.status(201).json(result);
         } catch (error: any) {
+            console.error("[Shipment Controller] Validation/Creation failed:", error);
+            if (error.errors) {
+                return res.status(400).json({ error: 'Validation failed', details: error.errors });
+            }
             res.status(400).json({ error: error.message });
         }
     }
 
+
     async getMyShipments(req: AuthRequest, res: Response) {
         try {
-            const result = await shipmentService.findByOwner(req.user!.userId);
+            const result = await shipmentService.findByOwner(req.user!.id);
             res.status(200).json(result);
         } catch (error: any) {
             res.status(500).json({ error: error.message });
@@ -34,7 +45,7 @@ export class ShipmentController {
 
     async getCarrierJobs(req: AuthRequest, res: Response) {
         try {
-            const result = await shipmentService.findCarrierJobs(req.user!.userId);
+            const result = await shipmentService.findCarrierJobs(req.user!.id);
             res.status(200).json(result);
         } catch (error: any) {
             res.status(500).json({ error: error.message });
@@ -62,19 +73,27 @@ export class ShipmentController {
 
     async update(req: AuthRequest, res: Response) {
         try {
-            const result = await shipmentService.update(req.params.id as string, req.body, req.user!.userId);
+            // Validate partially
+            const validatedData = UpdateShipmentSchema.parse(req.body);
+
+            const result = await shipmentService.update(req.params.id as string, validatedData, req.user!.id);
             res.status(200).json(result);
         } catch (error: any) {
-            res.status(401).json({ error: error.message });
+            if (error.errors) {
+                return res.status(400).json({ error: 'Validation failed', details: error.errors });
+            }
+            const isForbidden = error.message?.startsWith('FORBIDDEN');
+            res.status(isForbidden ? 403 : 400).json({ error: error.message });
         }
     }
 
+
     async delete(req: AuthRequest, res: Response) {
         try {
-            await shipmentService.delete(req.params.id as string, req.user!.userId);
+            await shipmentService.delete(req.params.id as string, req.user!.id);
             res.status(204).send();
         } catch (error: any) {
-            res.status(401).json({ error: error.message });
+            res.status(403).json({ error: error.message });
         }
     }
 }

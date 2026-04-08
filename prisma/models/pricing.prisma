@@ -1,0 +1,23 @@
+// =====================
+// 17. REVENUE ENGINE & PRICING
+// =====================
+
+model PricingRule {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  
+  basePrice   Decimal  @db.Decimal(12, 2)
+  pricePerKm  Decimal  @db.Decimal(12, 2)
+  pricePerKg  Decimal  @db.Decimal(12, 2)
+  
+  minWeight   Float?
+  maxWeight   Float?
+  
+  isActive    Boolean  @default(true)
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  deletedAt   DateTime?
+
+  @@index([isActive])
+}

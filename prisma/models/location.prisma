@@ -1,0 +1,20 @@
+// =====================
+// 15. LOCATION & GIS
+// =====================
+
+model GeoLocation {
+  id        String   @id @default(cuid())
+  latitude  Float
+  longitude Float
+  address   String?  // Human-readable from Geocoding API
+  plusCode  String?  // Google Maps Plus Code support
+  
+  placeId   String?  // Google Maps unique Place ID
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deletedAt DateTime? // Archival
+
+  @@index([latitude, longitude])
+  @@index([placeId])
+}

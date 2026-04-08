@@ -1,17 +1,17 @@
 import prisma from '../../config/db';
 
 export class ReviewRepository {
-    async create(rating: number, comment: string, fromId: string, toId: string) {
+    async create(rating: number, comment: string, fromUserId: string, toUserId: string, shipmentId: string) {
         return prisma.review.create({
-            data: { rating, comment, fromId, toId }
+            data: { rating, comment, fromUserId, toUserId, shipmentId }
         });
     }
 
-    async findManyByToUser(toId: string) {
+    async findManyByToUser(toUserId: string) {
         return prisma.review.findMany({
-            where: { toId },
+            where: { toUserId },
             include: {
-                from: {
+                fromUser: {
                     select: { firstName: true, lastName: true }
                 }
             }

@@ -1,0 +1,42 @@
+// =====================
+// 9. NOTIFICATION SYSTEM
+// =====================
+
+model Notification {
+  id        String           @id @default(cuid())
+  userId    String
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      NotificationType 
+  title     String
+  message   String
+  isRead    Boolean          @default(false)
+  
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+  deletedAt DateTime?
+
+  @@index([userId])
+  @@index([userId, isRead]) 
+}
+
+model NotificationPreference {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  email     Boolean  @default(true)
+  push      Boolean  @default(true)
+  sms       Boolean  @default(false)
+  
+  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now())
+}
+
+enum NotificationType {
+  BID_RECEIVED
+  BID_ACCEPTED
+  BID_REJECTED
+  SHIPMENT_UPDATE
+  PAYMENT_RECEIVED
+  DISPUTE_OPENED
+  SYSTEM
+}

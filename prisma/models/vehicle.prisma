@@ -1,0 +1,32 @@
+// =====================
+// 2. VEHICLE MANAGEMENT
+// =====================
+
+model CarrierVehicle {
+  id             String   @id @default(cuid())
+  carrierId      String
+  carrier        Carrier  @relation(fields: [carrierId], references: [id], onDelete: Cascade)
+  vehicleType    String
+  capacityWeight Float?
+  capacityVolume Float?
+  plateNumber    String   @unique 
+
+  vehicleInfo    VehicleType? @relation(fields: [vehicleType], references: [name])
+
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  deletedAt      DateTime?
+
+  @@index([carrierId])
+  @@index([vehicleType])
+}
+
+model VehicleType {
+  name        String   @id
+  description String?
+  vehicles    CarrierVehicle[]
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  deletedAt   DateTime?
+}

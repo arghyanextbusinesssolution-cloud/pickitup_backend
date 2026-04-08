@@ -11,10 +11,12 @@ import { bookingRoutes } from './modules/bookings';
 import { reviewRoutes } from './modules/reviews';
 import { bidRoutes } from './modules/bids';
 import { paymentRoutes } from './modules/payments';
+import { paymentController } from './modules/payments/payment.controller';
 import { invoiceRoutes } from './modules/invoices';
 import { adminRoutes } from './modules/admin';
 import { disputeRoutes } from './modules/disputes';
 import { cmsRoutes } from './modules/cms';
+import shipperRoutes from './modules/shippers/shipper.routes';
 
 const app = express();
 
@@ -29,6 +31,11 @@ app.use(cors({
     origin: allowedOrigins,
     credentials: true,
 }));
+
+// Stripe Webhook needs the raw body - MUST be before express.json()
+// Wire directly to the controller so the request is fully handled here.
+app.post('/api/payments/webhook', express.raw({ type: 'application/json' }), paymentController.webhook);
+
 app.use(express.json());
 app.use(morgan('dev'));
 
@@ -45,6 +52,7 @@ app.use('/api/invoices', invoiceRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/disputes', disputeRoutes);
 app.use('/api/cms', cmsRoutes);
+app.use('/api/shippers', shipperRoutes);
 
 // Health check
 app.get('/health', (req, res) => {

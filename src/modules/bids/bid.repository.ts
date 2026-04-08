@@ -1,9 +1,14 @@
 import prisma from '../../config/db';
 
 export class BidRepository {
-    async create(data: { amount: number; deliveryDate?: Date; shipmentId: string; carrierId: string }) {
+    async create(data: { amount: number; deliveryEstimate?: Date; shipmentId: string; carrierId: string }) {
         return prisma.bid.create({
-            data
+            data: {
+                amount: data.amount,
+                deliveryEstimate: data.deliveryEstimate,
+                shipmentId: data.shipmentId,
+                carrierId: data.carrierId,
+            }
         });
     }
 
