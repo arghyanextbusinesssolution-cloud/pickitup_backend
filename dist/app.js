@@ -16,14 +16,26 @@ const bookings_1 = require("./modules/bookings");
 const reviews_1 = require("./modules/reviews");
 const bids_1 = require("./modules/bids");
 const payments_1 = require("./modules/payments");
+const payment_controller_1 = require("./modules/payments/payment.controller");
 const invoices_1 = require("./modules/invoices");
 const admin_1 = require("./modules/admin");
 const disputes_1 = require("./modules/disputes");
 const cms_1 = require("./modules/cms");
+const shipper_routes_1 = __importDefault(require("./modules/shippers/shipper.routes"));
 const app = (0, express_1.default)();
 // Middlewares
 app.use((0, helmet_1.default)());
-app.use((0, cors_1.default)());
+const allowedOrigins = [
+    process.env.FRONTEND_URL,
+    'http://localhost:3000'
+].filter(Boolean);
+app.use((0, cors_1.default)({
+    origin: allowedOrigins,
+    credentials: true,
+}));
+// Stripe Webhook needs the raw body - MUST be before express.json()
+// Wire directly to the controller so the request is fully handled here.
+app.post('/api/payments/webhook', express_1.default.raw({ type: 'application/json' }), payment_controller_1.paymentController.webhook);
 app.use(express_1.default.json());
 app.use((0, morgan_1.default)('dev'));
 // Routes
@@ -39,6 +51,7 @@ app.use('/api/invoices', invoices_1.invoiceRoutes);
 app.use('/api/admin', admin_1.adminRoutes);
 app.use('/api/disputes', disputes_1.disputeRoutes);
 app.use('/api/cms', cms_1.cmsRoutes);
+app.use('/api/shippers', shipper_routes_1.default);
 // Health check
 app.get('/health', (req, res) => {
     res.status(200).json({ status: 'OK', timestamp: new Date().toISOString() });

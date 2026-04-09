@@ -12,22 +12,30 @@ class AuthService {
     async register(data) {
         const hashedPassword = await bcryptjs_1.default.hash(data.password, 10);
         const user = await auth_repository_1.authRepository.createUser(data, hashedPassword);
-        if (data.role === 'CARRIER' && data.companyName) {
-            await auth_repository_1.authRepository.createCarrier(data.companyName, user.id);
+        if (data.role === 'CARRIER') {
+            const companyName = data.companyName || `${data.firstName || 'Carrier'} Transport`;
+            await auth_repository_1.authRepository.createCarrier(companyName, user.id);
         }
-        return this.generateToken(user.id, user.email, user.role);
+        return this.generateToken(user);
     }
     async login(data) {
         const user = await auth_repository_1.authRepository.findByEmail(data.email);
-        if (!user || !(await bcryptjs_1.default.compare(data.password, user.password))) {
+        if (!user || !(await bcryptjs_1.default.compare(data.password, user.passwordHash))) {
             throw new Error('Invalid credentials');
         }
-        return this.generateToken(user.id, user.email, user.role);
+        return this.generateToken(user);
     }
-    generateToken(userId, email, role) {
+    generateToken(user) {
         const secret = env_1.env.JWT_SECRET;
-        const token = jsonwebtoken_1.default.sign({ userId, email, role }, secret, { expiresIn: '1d' });
-        return { token, user: { userId, email, role } };
+        const payload = {
+            id: user.id,
+            email: user.email,
+            firstName: user.firstName,
+            lastName: user.lastName,
+            role: user.role
+        };
+        const token = jsonwebtoken_1.default.sign(payload, secret, { expiresIn: '1d' });
+        return { token, user: payload };
     }
 }
 exports.AuthService = AuthService;

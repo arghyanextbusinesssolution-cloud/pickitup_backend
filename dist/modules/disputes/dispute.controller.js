@@ -7,7 +7,7 @@ class DisputeController {
     async create(req, res) {
         try {
             const { bookingId, reason } = req.body;
-            const result = await disputeService.openDispute(bookingId, reason, req.user.userId);
+            const result = await disputeService.openDispute(bookingId, reason, req.user.id);
             res.status(201).json(result);
         }
         catch (error) {

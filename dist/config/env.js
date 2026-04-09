@@ -7,6 +7,7 @@ exports.env = void 0;
 const zod_1 = require("zod");
 const dotenv_1 = __importDefault(require("dotenv"));
 dotenv_1.default.config();
+// console.log("DEBUG: Maps API Key (Backend):", process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY);
 const envSchema = zod_1.z.object({
     PORT: zod_1.z.string().default('5000'),
     NODE_ENV: zod_1.z.enum(['development', 'production', 'test']).default('development'),
@@ -17,6 +18,10 @@ const envSchema = zod_1.z.object({
     AWS_ACCESS_KEY_ID: zod_1.z.string().optional(),
     AWS_SECRET_ACCESS_KEY: zod_1.z.string().optional(),
     AWS_REGION: zod_1.z.string().default('us-east-1'),
+    STRIPE_SECRET_KEY: zod_1.z.string(),
+    STRIPE_PUBLIC_KEY: zod_1.z.string(),
+    STRIPE_WEBHOOK_SECRET: zod_1.z.string(),
+    FRONTEND_URL: zod_1.z.string().url().default('http://localhost:3000'),
 });
 const _env = envSchema.safeParse(process.env);
 if (!_env.success) {

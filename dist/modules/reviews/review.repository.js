@@ -6,16 +6,16 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.reviewRepository = exports.ReviewRepository = void 0;
 const db_1 = __importDefault(require("../../config/db"));
 class ReviewRepository {
-    async create(rating, comment, fromId, toId) {
+    async create(rating, comment, fromUserId, toUserId, shipmentId) {
         return db_1.default.review.create({
-            data: { rating, comment, fromId, toId }
+            data: { rating, comment, fromUserId, toUserId, shipmentId }
         });
     }
-    async findManyByToUser(toId) {
+    async findManyByToUser(toUserId) {
         return db_1.default.review.findMany({
-            where: { toId },
+            where: { toUserId },
             include: {
-                from: {
+                fromUser: {
                     select: { firstName: true, lastName: true }
                 }
             }

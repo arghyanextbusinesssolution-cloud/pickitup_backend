@@ -7,4 +7,7 @@ const router = (0, express_1.Router)();
 router.use(auth_middleware_1.authMiddleware);
 router.post('/', booking_controller_1.bookingController.create);
 router.get('/my', booking_controller_1.bookingController.getMyBookings);
+router.get('/:id', booking_controller_1.bookingController.getById);
+router.post('/:id/verify-pickup', booking_controller_1.bookingController.verifyPickupOtp);
+router.post('/:id/verify-delivery', booking_controller_1.bookingController.verifyDeliveryOtp);
 exports.default = router;

@@ -6,7 +6,7 @@ const carrierService = new carrier_service_1.CarrierService();
 class CarrierController {
     async getProfile(req, res) {
         try {
-            const result = await carrierService.findProfile(req.user.userId);
+            const result = await carrierService.findProfile(req.user.id);
             if (!result)
                 return res.status(404).json({ error: 'Carrier profile not found' });
             res.status(200).json(result);
@@ -18,7 +18,7 @@ class CarrierController {
     async placeBid(req, res) {
         try {
             const { shipmentId, amount, deliveryDate } = req.body;
-            const carrier = await carrierService.findProfile(req.user.userId);
+            const carrier = await carrierService.findProfile(req.user.id);
             if (!carrier)
                 return res.status(403).json({ error: 'Not a carrier' });
             const result = await carrierService.placeBid(carrier.id, shipmentId, amount, deliveryDate);
@@ -30,10 +30,22 @@ class CarrierController {
     }
     async getMyBids(req, res) {
         try {
-            const carrier = await carrierService.findProfile(req.user.userId);
+            const carrier = await carrierService.findProfile(req.user.id);
             if (!carrier)
                 return res.status(403).json({ error: 'Not a carrier' });
             const result = await carrierService.getCarrierBids(carrier.id);
+            res.status(200).json(result);
+        }
+        catch (error) {
+            res.status(500).json({ error: error.message });
+        }
+    }
+    async getEarningsStats(req, res) {
+        try {
+            const carrier = await carrierService.findProfile(req.user.id);
+            if (!carrier)
+                return res.status(403).json({ error: 'Not a carrier' });
+            const result = await carrierService.getEarningsStats(carrier.id);
             res.status(200).json(result);
         }
         catch (error) {

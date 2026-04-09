@@ -8,7 +8,12 @@ const db_1 = __importDefault(require("../../config/db"));
 class BidRepository {
     async create(data) {
         return db_1.default.bid.create({
-            data
+            data: {
+                amount: data.amount,
+                deliveryEstimate: data.deliveryEstimate,
+                shipmentId: data.shipmentId,
+                carrierId: data.carrierId,
+            }
         });
     }
     async findById(id) {

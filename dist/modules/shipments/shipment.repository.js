@@ -10,7 +10,9 @@ class ShipmentRepository {
         return db_1.default.shipment.create({
             data: {
                 ...data,
-                ownerId
+                ownerId,
+                pickupDate: data.pickupDate ? new Date(data.pickupDate) : undefined,
+                deliveryDate: data.deliveryDate ? new Date(data.deliveryDate) : undefined,
             }
         });
     }
@@ -27,7 +29,8 @@ class ShipmentRepository {
                 },
                 bids: true,
                 booking: true
-            }
+            },
+            orderBy: { createdAt: 'desc' }
         });
     }
     async findByOwnerId(ownerId) {
@@ -42,7 +45,7 @@ class ShipmentRepository {
     }
     async findAvailable() {
         return db_1.default.shipment.findMany({
-            where: { status: 'PENDING' },
+            where: { status: 'OPEN' },
             include: {
                 owner: {
                     select: {
@@ -80,18 +83,32 @@ class ShipmentRepository {
                     include: {
                         carrier: true
                     }
-                }
+                },
+                booking: true,
+                items: true,
+                images: true,
+                stops: true,
+                documents: true
             }
         });
     }
     async update(id, data) {
+        const updateData = { ...data };
+        if (data.pickupDate)
+            updateData.pickupDate = new Date(data.pickupDate);
+        if (data.deliveryDate)
+            updateData.deliveryDate = new Date(data.deliveryDate);
         return db_1.default.shipment.update({
             where: { id },
-            data
+            data: updateData
         });
     }
     async delete(id) {
-        return db_1.default.shipment.delete({ where: { id } });
+        // Use soft delete by default for production hardening
+        return db_1.default.shipment.update({
+            where: { id },
+            data: { deletedAt: new Date() }
+        });
     }
 }
 exports.ShipmentRepository = ShipmentRepository;

@@ -10,13 +10,16 @@ class AuthRepository {
         return db_1.default.user.findUnique({ where: { email } });
     }
     async createUser(data, hashedPassword) {
+        // Map 'USER' role to 'SHIPPER' to match Prisma enum
+        const role = data.role === 'USER' ? 'SHIPPER' : data.role;
+        console.log('[AuthRepository] Creating user in DB with role:', role);
         return db_1.default.user.create({
             data: {
                 email: data.email,
-                password: hashedPassword,
+                passwordHash: hashedPassword,
                 firstName: data.firstName,
                 lastName: data.lastName,
-                role: data.role
+                role: role
             }
         });
     }

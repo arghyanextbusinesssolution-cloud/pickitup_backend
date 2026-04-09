@@ -9,4 +9,5 @@ router.use((0, auth_middleware_1.roleMiddleware)(['CARRIER', 'ADMIN']));
 router.get('/profile', carrier_controller_1.carrierController.getProfile);
 router.post('/bid', carrier_controller_1.carrierController.placeBid);
 router.get('/bids', carrier_controller_1.carrierController.getMyBids);
+router.get('/earnings/stats', carrier_controller_1.carrierController.getEarningsStats);
 exports.default = router;

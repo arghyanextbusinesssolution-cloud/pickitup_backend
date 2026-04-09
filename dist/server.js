@@ -6,7 +6,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const app_1 = __importDefault(require("./app"));
 const env_1 = require("./config/env");
 const logger_1 = require("./utils/logger");
-const port = env_1.env.PORT;
-app_1.default.listen(port, () => {
+const port = Number(env_1.env.PORT);
+app_1.default.listen(port, '0.0.0.0', () => {
     logger_1.logger.info(`Server is running on port ${port}`);
 });
