@@ -10,13 +10,15 @@ export class AuthRepository {
         // Map 'USER' role to 'SHIPPER' to match Prisma enum
         const role = data.role === 'USER' ? 'SHIPPER' : data.role;
         
+        console.log('[AuthRepository] Creating user in DB with role:', role);
+        
         return prisma.user.create({
             data: {
                 email: data.email,
                 passwordHash: hashedPassword,
                 firstName: data.firstName,
                 lastName: data.lastName,
-                role: role as any // Still need to cast here as 'role' is a string but Prisma expects the Role enum
+                role: role as any
             }
         });
     }
