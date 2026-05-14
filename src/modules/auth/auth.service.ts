@@ -3,6 +3,7 @@ import jwt from 'jsonwebtoken';
 import { authRepository } from './auth.repository';
 import { RegisterDto, LoginDto } from './auth.types';
 import { env } from '../../config/env';
+import { otpService } from './otp.service';
 
 export class AuthService {
     async register(data: RegisterDto) {
@@ -26,6 +27,14 @@ export class AuthService {
         }
 
         return this.generateToken(user);
+    }
+
+    async sendEmailOtp(email: string, name: string) {
+        return otpService.sendEmailOtp(email, name);
+    }
+
+    async verifyEmailOtp(email: string, code: string) {
+        return otpService.verifyOtp(email, code);
     }
 
     private generateToken(user: any) {

@@ -22,6 +22,10 @@ const envSchema = zod_1.z.object({
     STRIPE_PUBLIC_KEY: zod_1.z.string(),
     STRIPE_WEBHOOK_SECRET: zod_1.z.string(),
     FRONTEND_URL: zod_1.z.string().url().default('http://localhost:3000'),
+    CLOUDINARY_CLOUD_NAME: zod_1.z.string(),
+    CLOUDINARY_API_KEY: zod_1.z.string(),
+    CLOUDINARY_API_SECRET: zod_1.z.string(),
+    CLOUDINARY_FOLDER: zod_1.z.string().default('dpickitup'),
 });
 const _env = envSchema.safeParse(process.env);
 if (!_env.success) {

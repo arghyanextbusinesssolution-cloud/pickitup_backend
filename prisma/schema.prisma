@@ -152,6 +152,18 @@ model RefreshToken {
   @@index([userId])
 }
 
+model Otp {
+  id        String   @id @default(cuid())
+  email     String
+  phone     String?
+  code      String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([email])
+  @@index([phone])
+}
+
 // =====================
 // 4. BIDDING SYSTEM
 // =====================
@@ -225,13 +237,24 @@ model Booking {
   otp           String?
   deliveryOtp   String?
   
+  // Verification handling
+  pickupPhotos      String[]
+  deliveryPhotos    String[]
+  
+  // Insurance & Claims
+  hasInsurance      Boolean @default(false)
+  insuranceFee      Decimal @default(0) @db.Decimal(12, 2)
+  isDamaged         Boolean @default(false)
+  damagePhotos      String[]
+  damageDescription String?
+  
   deletedAt     DateTime?     
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
 
   tracking ShipmentTracking[]
   payments Payment[]
-  disputes Dispute[]
+  claims   Claim[]
   history  BookingStatusHistory[]
 
   @@index([carrierId])
@@ -283,6 +306,17 @@ model Carrier {
   totalReviews Int       @default(0)    
   
   isVerified   Boolean   @default(false)
+  
+  // Identity Verification
+  governmentIdType   GovernmentIdType?
+  idFrontUrl         String?
+  idBackUrl          String?
+  selfieUrl          String?
+
+  // Bank Details (Deferred but adding fields for future)
+  bankName           String?
+  accountName        String?
+  accountNumber      String?
   
   deletedAt    DateTime? 
   createdAt    DateTime  @default(now())
@@ -373,20 +407,20 @@ enum VerificationStatus {
 }
 
 // =====================
-// 11. DISPUTE MANAGEMENT
+// 11. INSURANCE CLAIM MANAGEMENT
 // =====================
 
-model Dispute {
+model Claim {
   id         String        @id @default(cuid())
   bookingId  String
   booking    Booking       @relation(fields: [bookingId], references: [id], onDelete: Restrict)
   raisedById String
   raisedBy   User          @relation(fields: [raisedById], references: [id], onDelete: Restrict)
   reason     String
-  status     DisputeStatus @default(OPEN)
+  status     ClaimStatus @default(OPEN)
   
-  messages   DisputeMessage[]
-  attachments DisputeAttachment[]
+  messages   ClaimMessage[]
+  attachments ClaimAttachment[]
 
   createdAt  DateTime      @default(now())
   updatedAt  DateTime      @updatedAt
@@ -395,19 +429,21 @@ model Dispute {
   @@index([bookingId])
   @@index([raisedById])
   @@index([status])
+  @@map("Dispute")
 }
 
-enum DisputeStatus {
+enum ClaimStatus {
   OPEN
   UNDER_REVIEW
   RESOLVED
   CLOSED
+  @@map("DisputeStatus")
 }
 
-model DisputeMessage {
+model ClaimMessage {
   id        String   @id @default(cuid())
-  disputeId String
-  dispute   Dispute  @relation(fields: [disputeId], references: [id], onDelete: Cascade)
+  claimId   String
+  claim     Claim    @relation(fields: [claimId], references: [id], onDelete: Cascade)
   senderId  String
   sender    User     @relation(fields: [senderId], references: [id], onDelete: Restrict)
   message   String
@@ -416,14 +452,15 @@ model DisputeMessage {
   updatedAt DateTime @updatedAt
   deletedAt DateTime?
 
-  @@index([disputeId, createdAt]) 
+  @@index([claimId, createdAt]) 
   @@index([senderId])
+  @@map("DisputeMessage")
 }
 
-model DisputeAttachment {
+model ClaimAttachment {
   id          String   @id @default(cuid())
-  disputeId   String
-  dispute     Dispute  @relation(fields: [disputeId], references: [id], onDelete: Cascade)
+  claimId     String
+  claim       Claim    @relation(fields: [claimId], references: [id], onDelete: Cascade)
   fileUrl     String
   fileName    String?
   
@@ -431,7 +468,8 @@ model DisputeAttachment {
   updatedAt   DateTime @updatedAt
   deletedAt   DateTime?
 
-  @@index([disputeId])
+  @@index([claimId])
+  @@map("DisputeAttachment")
 }
 
 // =====================
@@ -655,7 +693,7 @@ enum NotificationType {
   BID_REJECTED
   SHIPMENT_UPDATE
   PAYMENT_RECEIVED
-  DISPUTE_OPENED
+  CLAIM_FILED
   SYSTEM
 }
 
@@ -897,8 +935,8 @@ model Shipment {
   // 📍 ORIGIN (UPDATED)
   // =====================
   originAddress        String
-  originLatitude       Float
-  originLongitude      Float
+  originLatitude       Float?
+  originLongitude      Float?
   originPlaceId        String?   
 
   originCity           String?   
@@ -910,8 +948,8 @@ model Shipment {
   // 📍 DESTINATION (UPDATED)
   // =====================
   destinationAddress   String
-  destinationLatitude  Float
-  destinationLongitude Float
+  destinationLatitude  Float?
+  destinationLongitude Float?
   destinationPlaceId   String?   
 
   destinationCity      String?   
@@ -929,6 +967,8 @@ model Shipment {
   // 📦 SHIPMENT DETAILS (IMPROVED)
   // =====================
   category             String?   
+  subcategory          String?   
+
 
   weight               Float?
   weightUnit           String @default("kg")  
@@ -1190,8 +1230,8 @@ model User {
   paymentsMade    Payment[]
   notifications   Notification[]
   notificationPreferences NotificationPreference?
-  disputesRaised  Dispute[]
-  disputeMessages DisputeMessage[]
+  claimsRaised    Claim[]
+  claimMessages   ClaimMessage[]
   activityLogs    ActivityLog[]
   adminActions    AdminAction[]
   uploadedFiles   FileUpload[]
@@ -1235,9 +1275,14 @@ model CarrierVehicle {
   carrierId      String
   carrier        Carrier  @relation(fields: [carrierId], references: [id], onDelete: Cascade)
   vehicleType    String
-  capacityWeight Float?
-  capacityVolume Float?
+  vehicleBrand   String?
+  vehicleModel   String?
   plateNumber    String   @unique 
+  loadCapacity   Float?
+  
+  // Documents
+  registrationDocUrl String?
+  insuranceDocUrl    String?
 
   vehicleInfo    VehicleType? @relation(fields: [vehicleType], references: [name])
 
@@ -1257,4 +1302,10 @@ model VehicleType {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   deletedAt   DateTime?
+}
+
+enum GovernmentIdType {
+  PASSPORT
+  DRIVING_LICENSE
+  NATIONAL_ID
 }

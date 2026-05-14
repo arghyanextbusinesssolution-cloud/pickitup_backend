@@ -13,6 +13,15 @@ class AdminController {
             res.status(500).json({ error: error.message });
         }
     }
+    async getClaims(req, res) {
+        try {
+            const claims = await adminService.getClaims();
+            res.status(200).json(claims);
+        }
+        catch (error) {
+            res.status(500).json({ error: error.message });
+        }
+    }
 }
 exports.AdminController = AdminController;
 exports.adminController = new AdminController();

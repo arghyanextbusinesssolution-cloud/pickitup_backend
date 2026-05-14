@@ -43,20 +43,47 @@ class ShipmentRepository {
             orderBy: { createdAt: 'desc' }
         });
     }
-    async findAvailable() {
-        return db_1.default.shipment.findMany({
-            where: { status: 'OPEN' },
+    async findAvailable(filters) {
+        let options = { status: 'OPEN' };
+        if (filters) {
+            if (filters.startDate || filters.endDate) {
+                options.createdAt = {};
+                if (filters.startDate)
+                    options.createdAt.gte = filters.startDate;
+                if (filters.endDate)
+                    options.createdAt.lte = filters.endDate;
+            }
+            if (filters.maxDistance) {
+                options.distanceKm = { lte: filters.maxDistance };
+            }
+        }
+        let shipments = await db_1.default.shipment.findMany({
+            where: options,
             include: {
-                owner: {
-                    select: {
-                        firstName: true,
-                        lastName: true
-                    }
-                },
+                owner: { select: { firstName: true, lastName: true } },
                 bids: true
             },
             orderBy: { createdAt: 'desc' }
         });
+        if (filters?.minBids) {
+            shipments = shipments.filter((s) => s.bids.length >= filters.minBids);
+        }
+        if (filters?.lat && filters?.lng && filters?.radius) {
+            shipments = shipments.filter((s) => {
+                if (!s.originLatitude || !s.originLongitude)
+                    return false;
+                const R = 6371;
+                const dLat = (s.originLatitude - filters.lat) * Math.PI / 180;
+                const dLon = (s.originLongitude - filters.lng) * Math.PI / 180;
+                const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                    Math.cos(filters.lat * Math.PI / 180) * Math.cos(s.originLatitude * Math.PI / 180) *
+                        Math.sin(dLon / 2) * Math.sin(dLon / 2);
+                const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+                const d = R * c;
+                return d <= filters.radius;
+            });
+        }
+        return shipments;
     }
     async findCarrierShipments(userId) {
         return db_1.default.shipment.findMany({

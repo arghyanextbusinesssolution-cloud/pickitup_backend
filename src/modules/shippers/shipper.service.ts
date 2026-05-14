@@ -3,34 +3,21 @@ import prisma from '../../config/db';
 export class ShipperService {
     async getPaymentStats(ownerId: string) {
         const [totalSpent, inEscrow, totalShipments, completedCount, recentPayments] = await Promise.all([
-            // Total Spent (Completed Bookings)
             prisma.booking.aggregate({
                 _sum: { price: true },
                 where: { shipment: { ownerId }, status: 'COMPLETED' }
             }),
-            // In Escrow (Confirmed or In Transit)
             prisma.booking.aggregate({
                 _sum: { price: true },
                 where: { shipment: { ownerId }, status: { in: ['CONFIRMED', 'IN_TRANSIT'] } }
             }),
-            // Total Shipments
-            prisma.shipment.count({
-                where: { ownerId }
-            }),
-            // Completed Shipments
-            prisma.shipment.count({
-                where: { ownerId, status: 'DELIVERED' }
-            }),
-            // Recent Payments/Bookings
+            prisma.shipment.count({ where: { ownerId } }),
+            prisma.shipment.count({ where: { ownerId, status: 'DELIVERED' } }),
             prisma.booking.findMany({
                 where: { shipment: { ownerId } },
                 take: 10,
                 orderBy: { createdAt: 'desc' },
-                include: {
-                    shipment: {
-                        select: { title: true, id: true }
-                    }
-                }
+                include: { shipment: { select: { title: true, id: true } } }
             })
         ]);
 
@@ -48,6 +35,40 @@ export class ShipperService {
                 createdAt: p.createdAt
             }))
         };
+    }
+
+    async updatePhone(userId: string, phone: string) {
+        return prisma.user.update({
+            where: { id: userId },
+            data: { phone },
+            select: { id: true, email: true, phone: true }
+        });
+    }
+
+    async addAddress(userId: string, data: {
+        addressLine1: string;
+        city: string;
+        state: string;
+        country: string;
+        postalCode: string;
+    }) {
+        // Mark user as verified once address is submitted (all steps complete)
+        await prisma.user.update({
+            where: { id: userId },
+            data: { isVerified: true }
+        });
+
+        return prisma.userAddress.create({
+            data: {
+                userId,
+                addressLine1: data.addressLine1,
+                addressLine2: undefined,
+                city: data.city,
+                state: data.state,
+                country: data.country,
+                postalCode: data.postalCode,
+            }
+        });
     }
 }
 

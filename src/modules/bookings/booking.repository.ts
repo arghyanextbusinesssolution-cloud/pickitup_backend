@@ -48,6 +48,17 @@ export class BookingRepository {
         });
     }
 
+    async findAll() {
+        return prisma.booking.findMany({
+            include: {
+                shipment: { include: { owner: true } },
+                carrier: { include: { user: true } },
+                bid: true,
+            },
+            orderBy: { createdAt: 'desc' }
+        });
+    }
+
     async findManyByCarrier(carrierId: string) {
         return prisma.booking.findMany({
             where: { carrierId },

@@ -38,8 +38,8 @@ class BookingController {
     }
     async verifyPickupOtp(req, res) {
         try {
-            const { otp } = req.body;
-            const result = await bookingService.verifyPickupOtp(req.params.id, otp);
+            const { otp, photos } = req.body;
+            const result = await bookingService.verifyPickupOtp(req.params.id, otp, photos);
             res.status(200).json(result);
         }
         catch (error) {
@@ -48,8 +48,8 @@ class BookingController {
     }
     async verifyDeliveryOtp(req, res) {
         try {
-            const { otp } = req.body;
-            const result = await bookingService.verifyDeliveryOtp(req.params.id, otp);
+            const { otp, photos, isDamaged, damagePhotos, damageDescription } = req.body;
+            const result = await bookingService.verifyDeliveryOtp(req.params.id, otp, photos, isDamaged, damagePhotos, damageDescription);
             res.status(200).json(result);
         }
         catch (error) {

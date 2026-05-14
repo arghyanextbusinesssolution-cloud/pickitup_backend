@@ -1,18 +1,18 @@
 // =====================
-// 11. DISPUTE MANAGEMENT
+// 11. INSURANCE CLAIM MANAGEMENT
 // =====================
 
-model Dispute {
+model Claim {
   id         String        @id @default(cuid())
   bookingId  String
   booking    Booking       @relation(fields: [bookingId], references: [id], onDelete: Restrict)
   raisedById String
   raisedBy   User          @relation(fields: [raisedById], references: [id], onDelete: Restrict)
   reason     String
-  status     DisputeStatus @default(OPEN)
+  status     ClaimStatus @default(OPEN)
   
-  messages   DisputeMessage[]
-  attachments DisputeAttachment[]
+  messages   ClaimMessage[]
+  attachments ClaimAttachment[]
 
   createdAt  DateTime      @default(now())
   updatedAt  DateTime      @updatedAt
@@ -21,19 +21,21 @@ model Dispute {
   @@index([bookingId])
   @@index([raisedById])
   @@index([status])
+  @@map("Dispute")
 }
 
-enum DisputeStatus {
+enum ClaimStatus {
   OPEN
   UNDER_REVIEW
   RESOLVED
   CLOSED
+  @@map("DisputeStatus")
 }
 
-model DisputeMessage {
+model ClaimMessage {
   id        String   @id @default(cuid())
-  disputeId String
-  dispute   Dispute  @relation(fields: [disputeId], references: [id], onDelete: Cascade)
+  claimId   String
+  claim     Claim    @relation(fields: [claimId], references: [id], onDelete: Cascade)
   senderId  String
   sender    User     @relation(fields: [senderId], references: [id], onDelete: Restrict)
   message   String
@@ -42,14 +44,15 @@ model DisputeMessage {
   updatedAt DateTime @updatedAt
   deletedAt DateTime?
 
-  @@index([disputeId, createdAt]) 
+  @@index([claimId, createdAt]) 
   @@index([senderId])
+  @@map("DisputeMessage")
 }
 
-model DisputeAttachment {
+model ClaimAttachment {
   id          String   @id @default(cuid())
-  disputeId   String
-  dispute     Dispute  @relation(fields: [disputeId], references: [id], onDelete: Cascade)
+  claimId     String
+  claim       Claim    @relation(fields: [claimId], references: [id], onDelete: Cascade)
   fileUrl     String
   fileName    String?
   
@@ -57,5 +60,6 @@ model DisputeAttachment {
   updatedAt   DateTime @updatedAt
   deletedAt   DateTime?
 
-  @@index([disputeId])
+  @@index([claimId])
+  @@map("DisputeAttachment")
 }

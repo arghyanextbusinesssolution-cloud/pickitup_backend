@@ -65,3 +65,15 @@ model RefreshToken {
 
   @@index([userId])
 }
+
+model Otp {
+  id        String   @id @default(cuid())
+  email     String
+  phone     String?
+  code      String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([email])
+  @@index([phone])
+}

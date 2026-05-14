@@ -1,12 +1,13 @@
 import { Router } from 'express';
 import { bookingController } from './booking.controller';
-import { authMiddleware } from '../../middlewares/auth.middleware';
+import { authMiddleware, roleMiddleware } from '../../middlewares/auth.middleware';
 
 const router = Router();
 
 router.use(authMiddleware);
 
 router.post('/', bookingController.create);
+router.get('/', roleMiddleware(['ADMIN']), bookingController.getAll);
 router.get('/my', bookingController.getMyBookings);
 router.get('/:id', bookingController.getById);
 router.post('/:id/verify-pickup', bookingController.verifyPickupOtp);

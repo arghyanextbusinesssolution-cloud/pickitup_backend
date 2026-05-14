@@ -51,6 +51,30 @@ export class CarrierController {
             res.status(500).json({ error: error.message });
         }
     }
+
+    async updateIdentity(req: AuthRequest, res: Response) {
+        try {
+            const carrier = await carrierService.findProfile(req.user!.id);
+            if (!carrier) return res.status(403).json({ error: 'Not a carrier' });
+
+            const result = await carrierService.updateIdentity(carrier.id, req.body);
+            res.status(200).json(result);
+        } catch (error: any) {
+            res.status(400).json({ error: error.message });
+        }
+    }
+
+    async addVehicle(req: AuthRequest, res: Response) {
+        try {
+            const carrier = await carrierService.findProfile(req.user!.id);
+            if (!carrier) return res.status(403).json({ error: 'Not a carrier' });
+
+            const result = await carrierService.addVehicle(carrier.id, req.body);
+            res.status(201).json(result);
+        } catch (error: any) {
+            res.status(400).json({ error: error.message });
+        }
+    }
 }
 
 export const carrierController = new CarrierController();

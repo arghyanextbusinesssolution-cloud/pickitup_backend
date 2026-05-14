@@ -16,13 +16,24 @@ model Booking {
   otp           String?
   deliveryOtp   String?
   
+  // Verification handling
+  pickupPhotos      String[]
+  deliveryPhotos    String[]
+  
+  // Insurance & Claims
+  hasInsurance      Boolean @default(false)
+  insuranceFee      Decimal @default(0) @db.Decimal(12, 2)
+  isDamaged         Boolean @default(false)
+  damagePhotos      String[]
+  damageDescription String?
+  
   deletedAt     DateTime?     
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
 
   tracking ShipmentTracking[]
   payments Payment[]
-  disputes Dispute[]
+  claims   Claim[]
   history  BookingStatusHistory[]
 
   @@index([carrierId])

@@ -15,8 +15,8 @@ export class ShipmentService {
         return shipmentRepository.findByOwnerId(ownerId);
     }
 
-    async findAvailable() {
-        return shipmentRepository.findAvailable();
+    async findAvailable(filters?: any) {
+        return shipmentRepository.findAvailable(filters);
     }
 
     async findCarrierJobs(userId: string) {

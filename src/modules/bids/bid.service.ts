@@ -42,6 +42,10 @@ export class BidService {
         return bidRepository.findManyByCarrier(carrierId);
     }
 
+    async findAll() {
+        return bidRepository.findAll();
+    }
+
     async getBidById(bidId: string) {
         return prisma.bid.findUnique({
             where: { id: bidId },

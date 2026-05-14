@@ -19,6 +19,15 @@ const envSchema = z.object({
     STRIPE_PUBLIC_KEY: z.string(),
     STRIPE_WEBHOOK_SECRET: z.string(),
     FRONTEND_URL: z.string().url().default('http://localhost:3000'),
+    CLOUDINARY_CLOUD_NAME: z.string(),
+    CLOUDINARY_API_KEY: z.string(),
+    CLOUDINARY_API_SECRET: z.string(),
+    CLOUDINARY_FOLDER: z.string().default('dpickitup'),
+    // EmailJS
+    EMAILJS_SERVICE_ID: z.string(),
+    EMAILJS_TEMPLATE_ID: z.string(),
+    EMAILJS_PUBLIC_KEY: z.string(),
+    EMAILJS_PRIVATE_KEY: z.string(),
 });
 
 const _env = envSchema.safeParse(process.env);

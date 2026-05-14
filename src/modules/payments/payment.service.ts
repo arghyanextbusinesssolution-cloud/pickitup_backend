@@ -11,7 +11,7 @@ const stripe = new Stripe(env.STRIPE_SECRET_KEY, {
 
 
 export class PaymentService {
-    async createCheckoutSession(bookingId: string, userId: string) {
+    async createCheckoutSession(bookingId: string, userId: string, useInsurance: boolean = false) {
         const booking = await bookingRepository.findById(bookingId);
         if (!booking) throw new Error('Booking not found');
         
@@ -27,12 +27,24 @@ export class PaymentService {
         try {
             const amount = Number(booking.price);
             const platformFee = Math.round(amount * 0.03 * 100) / 100; // 3% fee
-            const totalAmount = amount + platformFee;
+            const insuranceFee = useInsurance ? 100 : 0;
+            const totalAmount = amount + platformFee + insuranceFee;
+
+            if (useInsurance) {
+                await prisma.booking.update({
+                    where: { id: bookingId },
+                    data: {
+                        hasInsurance: true,
+                        insuranceFee: insuranceFee
+                    }
+                });
+            }
 
             // Log parameters to help debug
             console.log('DEBUG: Stripe Session Params:', {
                 bookingId,
                 userId,
+                useInsurance,
                 amount,
                 totalAmount,
                 cents: Math.round(totalAmount * 100)

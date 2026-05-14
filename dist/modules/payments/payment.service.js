@@ -14,7 +14,7 @@ const stripe = new stripe_1.default(env_1.env.STRIPE_SECRET_KEY, {
     apiVersion: '2026-03-25.dahlia',
 });
 class PaymentService {
-    async createCheckoutSession(bookingId, userId) {
+    async createCheckoutSession(bookingId, userId, useInsurance = false) {
         const booking = await booking_repository_1.bookingRepository.findById(bookingId);
         if (!booking)
             throw new Error('Booking not found');
@@ -28,11 +28,22 @@ class PaymentService {
         try {
             const amount = Number(booking.price);
             const platformFee = Math.round(amount * 0.03 * 100) / 100; // 3% fee
-            const totalAmount = amount + platformFee;
+            const insuranceFee = useInsurance ? 100 : 0;
+            const totalAmount = amount + platformFee + insuranceFee;
+            if (useInsurance) {
+                await db_1.default.booking.update({
+                    where: { id: bookingId },
+                    data: {
+                        hasInsurance: true,
+                        insuranceFee: insuranceFee
+                    }
+                });
+            }
             // Log parameters to help debug
             console.log('DEBUG: Stripe Session Params:', {
                 bookingId,
                 userId,
+                useInsurance,
                 amount,
                 totalAmount,
                 cents: Math.round(totalAmount * 100)

@@ -7,6 +7,7 @@ const router = Router();
 router.use(authMiddleware);
 
 router.post('/', roleMiddleware(['CARRIER']), bidController.create);
+router.get('/', roleMiddleware(['ADMIN']), bidController.getAll);
 router.post('/:bidId/accept', roleMiddleware(['SHIPPER']), bidController.acceptBid);
 router.get('/shipment/:shipmentId', bidController.getShipmentBids);
 router.get('/my', roleMiddleware(['CARRIER']), bidController.getMyBids);

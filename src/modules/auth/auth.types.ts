@@ -3,6 +3,7 @@ export interface RegisterDto {
     password: string;
     firstName?: string;
     lastName?: string;
+    phone?: string;
     role: 'SHIPPER' | 'CARRIER' | 'ADMIN' | 'USER';
     companyName?: string;
 }

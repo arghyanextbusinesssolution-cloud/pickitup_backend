@@ -18,6 +18,7 @@ export class AuthRepository {
                 passwordHash: hashedPassword,
                 firstName: data.firstName,
                 lastName: data.lastName,
+                phone: data.phone,
                 role: role as any
             }
         });

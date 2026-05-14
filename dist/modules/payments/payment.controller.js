@@ -5,11 +5,11 @@ const payment_service_1 = require("./payment.service");
 class PaymentController {
     async createCheckoutSession(req, res) {
         try {
-            const { bookingId } = req.body;
+            const { bookingId, useInsurance } = req.body;
             if (!bookingId) {
                 return res.status(400).json({ error: 'bookingId is required' });
             }
-            const result = await payment_service_1.paymentService.createCheckoutSession(bookingId, req.user.id);
+            const result = await payment_service_1.paymentService.createCheckoutSession(bookingId, req.user.id, useInsurance);
             res.status(200).json(result);
         }
         catch (error) {

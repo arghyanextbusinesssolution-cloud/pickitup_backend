@@ -2,6 +2,16 @@ import { z } from 'zod';
 
 export const LocationTypeSchema = z.enum(['RESIDENTIAL', 'BUSINESS', 'WAREHOUSE', 'PORT']);
 
+// Category → Subcategory mapping (for reference/validation)
+export const CATEGORY_SUBCATEGORIES: Record<string, string[]> = {
+    'Home Moving': ['Studio Apartment', 'Living Room', 'Bedroom Set', 'Kitchen Items', 'Full House', 'Office Furniture'],
+    'Vehicles': ['Car', 'Motorcycle', 'Boat', 'ATV/Quad', 'Bicycle', 'Parts & Accessories'],
+    'Heavy Equipment': ['Construction', 'Agricultural', 'Industrial', 'Generators', 'Machinery'],
+    'General Goods': ['Clothing', 'Electronics', 'Appliances', 'Sporting Goods', 'Tools', 'Other'],
+    'Fragile Items': ['Glassware', 'Artwork', 'Antiques', 'Musical Instruments', 'Electronics'],
+    'Parcel': ['Documents', 'Small Package', 'Medium Package', 'Large Package', 'Envelope', 'Pallet'],
+};
+
 // 1. BASE SCHEMA (No validation logic)
 const shipmentBaseSchema = z.object({
     title: z.string().min(3),
@@ -9,8 +19,8 @@ const shipmentBaseSchema = z.object({
     
     // Origin
     originAddress: z.string(),
-    originLatitude: z.number(),
-    originLongitude: z.number(),
+    originLatitude: z.number().optional(),
+    originLongitude: z.number().optional(),
     originPlaceId: z.string().optional(),
     originCity: z.string().optional(),
     originState: z.string().optional(),
@@ -19,8 +29,8 @@ const shipmentBaseSchema = z.object({
 
     // Destination
     destinationAddress: z.string(),
-    destinationLatitude: z.number(),
-    destinationLongitude: z.number(),
+    destinationLatitude: z.number().optional(),
+    destinationLongitude: z.number().optional(),
     destinationPlaceId: z.string().optional(),
     destinationCity: z.string().optional(),
     destinationState: z.string().optional(),
@@ -32,6 +42,8 @@ const shipmentBaseSchema = z.object({
     estimatedTimeMin: z.number().optional(),
     
     category: z.string().optional(),
+    subcategory: z.string().optional(),
+    photoUrls: z.array(z.string()).optional().default([]),
     weight: z.number().optional(),
     weightUnit: z.string().default('kg'),
     

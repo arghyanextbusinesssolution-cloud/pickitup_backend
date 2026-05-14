@@ -1,16 +1,25 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.UpdateShipmentSchema = exports.CreateShipmentSchema = exports.LocationTypeSchema = void 0;
+exports.UpdateShipmentSchema = exports.CreateShipmentSchema = exports.CATEGORY_SUBCATEGORIES = exports.LocationTypeSchema = void 0;
 const zod_1 = require("zod");
 exports.LocationTypeSchema = zod_1.z.enum(['RESIDENTIAL', 'BUSINESS', 'WAREHOUSE', 'PORT']);
+// Category → Subcategory mapping (for reference/validation)
+exports.CATEGORY_SUBCATEGORIES = {
+    'Home Moving': ['Studio Apartment', 'Living Room', 'Bedroom Set', 'Kitchen Items', 'Full House', 'Office Furniture'],
+    'Vehicles': ['Car', 'Motorcycle', 'Boat', 'ATV/Quad', 'Bicycle', 'Parts & Accessories'],
+    'Heavy Equipment': ['Construction', 'Agricultural', 'Industrial', 'Generators', 'Machinery'],
+    'General Goods': ['Clothing', 'Electronics', 'Appliances', 'Sporting Goods', 'Tools', 'Other'],
+    'Fragile Items': ['Glassware', 'Artwork', 'Antiques', 'Musical Instruments', 'Electronics'],
+    'Parcel': ['Documents', 'Small Package', 'Medium Package', 'Large Package', 'Envelope', 'Pallet'],
+};
 // 1. BASE SCHEMA (No validation logic)
 const shipmentBaseSchema = zod_1.z.object({
     title: zod_1.z.string().min(3),
     description: zod_1.z.string().optional(),
     // Origin
     originAddress: zod_1.z.string(),
-    originLatitude: zod_1.z.number(),
-    originLongitude: zod_1.z.number(),
+    originLatitude: zod_1.z.number().optional(),
+    originLongitude: zod_1.z.number().optional(),
     originPlaceId: zod_1.z.string().optional(),
     originCity: zod_1.z.string().optional(),
     originState: zod_1.z.string().optional(),
@@ -18,8 +27,8 @@ const shipmentBaseSchema = zod_1.z.object({
     originPostalCode: zod_1.z.string().optional(),
     // Destination
     destinationAddress: zod_1.z.string(),
-    destinationLatitude: zod_1.z.number(),
-    destinationLongitude: zod_1.z.number(),
+    destinationLatitude: zod_1.z.number().optional(),
+    destinationLongitude: zod_1.z.number().optional(),
     destinationPlaceId: zod_1.z.string().optional(),
     destinationCity: zod_1.z.string().optional(),
     destinationState: zod_1.z.string().optional(),
@@ -29,6 +38,8 @@ const shipmentBaseSchema = zod_1.z.object({
     distanceKm: zod_1.z.number().optional(),
     estimatedTimeMin: zod_1.z.number().optional(),
     category: zod_1.z.string().optional(),
+    subcategory: zod_1.z.string().optional(),
+    photoUrls: zod_1.z.array(zod_1.z.string()).optional().default([]),
     weight: zod_1.z.number().optional(),
     weightUnit: zod_1.z.string().default('kg'),
     length: zod_1.z.number().optional(),

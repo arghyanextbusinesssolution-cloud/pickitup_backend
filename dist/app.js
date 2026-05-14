@@ -22,6 +22,7 @@ const admin_1 = require("./modules/admin");
 const disputes_1 = require("./modules/disputes");
 const cms_1 = require("./modules/cms");
 const shipper_routes_1 = __importDefault(require("./modules/shippers/shipper.routes"));
+const uploads_1 = require("./modules/uploads");
 const app = (0, express_1.default)();
 // Middlewares
 app.use((0, helmet_1.default)());
@@ -52,6 +53,7 @@ app.use('/api/admin', admin_1.adminRoutes);
 app.use('/api/disputes', disputes_1.disputeRoutes);
 app.use('/api/cms', cms_1.cmsRoutes);
 app.use('/api/shippers', shipper_routes_1.default);
+app.use('/api/uploads', uploads_1.uploadRoutes);
 // Health check
 app.get('/health', (req, res) => {
     res.status(200).json({ status: 'OK', timestamp: new Date().toISOString() });

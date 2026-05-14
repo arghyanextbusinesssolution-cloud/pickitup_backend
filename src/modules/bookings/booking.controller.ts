@@ -37,8 +37,8 @@ export class BookingController {
 
     async verifyPickupOtp(req: AuthRequest, res: Response) {
         try {
-            const { otp } = req.body;
-            const result = await bookingService.verifyPickupOtp(req.params.id as string, otp as string);
+            const { otp, photos } = req.body;
+            const result = await bookingService.verifyPickupOtp(req.params.id as string, otp as string, photos as string[]);
             res.status(200).json(result);
         } catch (error: any) {
             res.status(400).json({ error: error.message });
@@ -47,11 +47,27 @@ export class BookingController {
 
     async verifyDeliveryOtp(req: AuthRequest, res: Response) {
         try {
-            const { otp } = req.body;
-            const result = await bookingService.verifyDeliveryOtp(req.params.id as string, otp as string);
+            const { otp, photos, isDamaged, damagePhotos, damageDescription } = req.body;
+            const result = await bookingService.verifyDeliveryOtp(
+                req.params.id as string, 
+                otp as string, 
+                photos as string[],
+                isDamaged,
+                damagePhotos,
+                damageDescription
+            );
             res.status(200).json(result);
         } catch (error: any) {
             res.status(400).json({ error: error.message });
+        }
+    }
+
+    async getAll(req: AuthRequest, res: Response) {
+        try {
+            const result = await bookingService.findAll();
+            res.status(200).json(result);
+        } catch (error: any) {
+            res.status(500).json({ error: error.message });
         }
     }
 }

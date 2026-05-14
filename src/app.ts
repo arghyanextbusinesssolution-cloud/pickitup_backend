@@ -14,9 +14,10 @@ import { paymentRoutes } from './modules/payments';
 import { paymentController } from './modules/payments/payment.controller';
 import { invoiceRoutes } from './modules/invoices';
 import { adminRoutes } from './modules/admin';
-import { disputeRoutes } from './modules/disputes';
+import { claimRoutes } from './modules/claims';
 import { cmsRoutes } from './modules/cms';
 import shipperRoutes from './modules/shippers/shipper.routes';
+import { uploadRoutes } from './modules/uploads';
 
 const app = express();
 
@@ -50,9 +51,10 @@ app.use('/api/bids', bidRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/invoices', invoiceRoutes);
 app.use('/api/admin', adminRoutes);
-app.use('/api/disputes', disputeRoutes);
+app.use('/api/claims', claimRoutes);
 app.use('/api/cms', cmsRoutes);
 app.use('/api/shippers', shipperRoutes);
+app.use('/api/uploads', uploadRoutes);
 
 // Health check
 app.get('/health', (req, res) => {

@@ -16,8 +16,8 @@ model Shipment {
   // 📍 ORIGIN (UPDATED)
   // =====================
   originAddress        String
-  originLatitude       Float
-  originLongitude      Float
+  originLatitude       Float?
+  originLongitude      Float?
   originPlaceId        String?   
 
   originCity           String?   
@@ -29,8 +29,8 @@ model Shipment {
   // 📍 DESTINATION (UPDATED)
   // =====================
   destinationAddress   String
-  destinationLatitude  Float
-  destinationLongitude Float
+  destinationLatitude  Float?
+  destinationLongitude Float?
   destinationPlaceId   String?   
 
   destinationCity      String?   
@@ -48,6 +48,8 @@ model Shipment {
   // 📦 SHIPMENT DETAILS (IMPROVED)
   // =====================
   category             String?   
+  subcategory          String?   
+
 
   weight               Float?
   weightUnit           String @default("kg")  

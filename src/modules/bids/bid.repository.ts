@@ -19,6 +19,16 @@ export class BidRepository {
         });
     }
 
+    async findAll() {
+        return prisma.bid.findMany({
+            include: { 
+                carrier: { include: { user: true } }, 
+                shipment: { include: { owner: true } } 
+            },
+            orderBy: { createdAt: 'desc' }
+        });
+    }
+
     async findManyByShipment(shipmentId: string) {
         return prisma.bid.findMany({
             where: { shipmentId },

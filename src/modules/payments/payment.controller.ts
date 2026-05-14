@@ -5,12 +5,12 @@ import { paymentService } from './payment.service';
 export class PaymentController {
     async createCheckoutSession(req: AuthRequest, res: Response) {
         try {
-            const { bookingId } = req.body;
+            const { bookingId, useInsurance } = req.body;
             if (!bookingId) {
                 return res.status(400).json({ error: 'bookingId is required' });
             }
 
-            const result = await paymentService.createCheckoutSession(bookingId, req.user!.id);
+            const result = await paymentService.createCheckoutSession(bookingId, req.user!.id, useInsurance);
             res.status(200).json(result);
         } catch (error: any) {
             res.status(400).json({ error: error.message });

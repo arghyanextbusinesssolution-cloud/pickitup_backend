@@ -25,28 +25,38 @@ class BookingService {
             return booking_repository_1.bookingRepository.findManyByOwner(userId);
         }
     }
-    async verifyPickupOtp(bookingId, otp) {
+    async verifyPickupOtp(bookingId, otp, photos = []) {
         const booking = await booking_repository_1.bookingRepository.findById(bookingId);
         if (!booking)
             throw new Error('Booking not found');
         if (booking.otp !== otp) {
             throw new Error('Invalid pickup OTP code. Please check with the shipper.');
         }
-        // Atomically update shipment status
+        if (!photos || photos.length === 0) {
+            throw new Error('Verification photos are required for pickup.');
+        }
+        // Atomically update shipment status and save photos
         await db_1.default.$transaction([
             db_1.default.shipment.update({
                 where: { id: booking.shipmentId },
                 data: { status: client_1.ShipmentStatus.IN_TRANSIT },
+            }),
+            db_1.default.booking.update({
+                where: { id: bookingId },
+                data: { pickupPhotos: photos }
             })
         ]);
         return { success: true, status: 'PICKED_UP' };
     }
-    async verifyDeliveryOtp(bookingId, otp) {
+    async verifyDeliveryOtp(bookingId, otp, photos = [], isDamaged = false, damagePhotos = [], damageDescription) {
         const booking = await booking_repository_1.bookingRepository.findById(bookingId);
         if (!booking)
             throw new Error('Booking not found');
         if (booking.deliveryOtp !== otp) {
             throw new Error('Invalid delivery OTP code. Please check with the receiver.');
+        }
+        if (!photos || photos.length === 0) {
+            throw new Error('Verification photos are required for delivery.');
         }
         await db_1.default.$transaction([
             db_1.default.shipment.update({
@@ -55,7 +65,13 @@ class BookingService {
             }),
             db_1.default.booking.update({
                 where: { id: bookingId },
-                data: { status: client_1.BookingStatus.COMPLETED },
+                data: {
+                    status: client_1.BookingStatus.COMPLETED,
+                    deliveryPhotos: photos,
+                    isDamaged,
+                    damagePhotos,
+                    damageDescription
+                },
             }),
         ]);
         return { success: true, status: 'DELIVERED' };

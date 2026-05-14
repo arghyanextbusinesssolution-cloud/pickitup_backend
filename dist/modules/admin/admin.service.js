@@ -6,5 +6,8 @@ class AdminService {
     async getPlatformStats() {
         return admin_repository_1.adminRepository.getAnalytics();
     }
+    async getClaims() {
+        return admin_repository_1.adminRepository.getClaims();
+    }
 }
 exports.AdminService = AdminService;

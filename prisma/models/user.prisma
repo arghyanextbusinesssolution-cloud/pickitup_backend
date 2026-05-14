@@ -36,8 +36,8 @@ model User {
   paymentsMade    Payment[]
   notifications   Notification[]
   notificationPreferences NotificationPreference?
-  disputesRaised  Dispute[]
-  disputeMessages DisputeMessage[]
+  claimsRaised    Claim[]
+  claimMessages   ClaimMessage[]
   activityLogs    ActivityLog[]
   adminActions    AdminAction[]
   uploadedFiles   FileUpload[]

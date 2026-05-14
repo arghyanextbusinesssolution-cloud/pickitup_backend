@@ -36,7 +36,18 @@ export class ShipmentController {
 
     async getAvailableShipments(req: AuthRequest, res: Response) {
         try {
-            const result = await shipmentService.findAvailable();
+            const { startDate, endDate, maxDistance, minBids, lat, lng, radius } = req.query;
+            const filters = {
+                startDate: startDate ? new Date(startDate as string) : undefined,
+                endDate: endDate ? new Date(endDate as string) : undefined,
+                maxDistance: maxDistance ? Number(maxDistance) : undefined,
+                minBids: minBids ? Number(minBids) : undefined,
+                lat: lat ? Number(lat) : undefined,
+                lng: lng ? Number(lng) : undefined,
+                radius: radius ? Number(radius) : undefined,
+            };
+
+            const result = await shipmentService.findAvailable(filters);
             res.status(200).json(result);
         } catch (error: any) {
             res.status(500).json({ error: error.message });

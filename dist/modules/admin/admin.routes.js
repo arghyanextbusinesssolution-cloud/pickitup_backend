@@ -7,4 +7,5 @@ const router = (0, express_1.Router)();
 router.use(auth_middleware_1.authMiddleware);
 router.use((0, auth_middleware_1.roleMiddleware)(['ADMIN']));
 router.get('/stats', admin_controller_1.adminController.getStats);
+router.get('/claims', admin_controller_1.adminController.getClaims);
 exports.default = router;

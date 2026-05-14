@@ -16,8 +16,8 @@ class ShipmentService {
     async findByOwner(ownerId) {
         return shipment_repository_1.shipmentRepository.findByOwnerId(ownerId);
     }
-    async findAvailable() {
-        return shipment_repository_1.shipmentRepository.findAvailable();
+    async findAvailable(filters) {
+        return shipment_repository_1.shipmentRepository.findAvailable(filters);
     }
     async findCarrierJobs(userId) {
         return shipment_repository_1.shipmentRepository.findCarrierShipments(userId);
