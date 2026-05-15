@@ -37,6 +37,9 @@ class BidService {
     async getCarrierBids(carrierId) {
         return bid_repository_1.bidRepository.findManyByCarrier(carrierId);
     }
+    async findAll() {
+        return bid_repository_1.bidRepository.findAll();
+    }
     async getBidById(bidId) {
         return db_1.default.bid.findUnique({
             where: { id: bidId },

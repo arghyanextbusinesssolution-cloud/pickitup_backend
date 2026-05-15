@@ -47,6 +47,16 @@ class BookingRepository {
             }
         });
     }
+    async findAll() {
+        return db_1.default.booking.findMany({
+            include: {
+                shipment: { include: { owner: true } },
+                carrier: { include: { user: true } },
+                bid: true,
+            },
+            orderBy: { createdAt: 'desc' }
+        });
+    }
     async findManyByCarrier(carrierId) {
         return db_1.default.booking.findMany({
             where: { carrierId },

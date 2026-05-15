@@ -56,6 +56,15 @@ class BookingController {
             res.status(400).json({ error: error.message });
         }
     }
+    async getAll(req, res) {
+        try {
+            const result = await bookingService.findAll();
+            res.status(200).json(result);
+        }
+        catch (error) {
+            res.status(500).json({ error: error.message });
+        }
+    }
 }
 exports.BookingController = BookingController;
 exports.bookingController = new BookingController();

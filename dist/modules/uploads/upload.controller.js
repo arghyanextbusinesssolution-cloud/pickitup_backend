@@ -32,24 +32,40 @@ var __importStar = (this && this.__importStar) || (function () {
         return result;
     };
 })();
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.uploadController = exports.UploadController = void 0;
 const cloudinary_1 = __importStar(require("../../config/cloudinary"));
+const db_1 = __importDefault(require("../../config/db"));
 class UploadController {
     /**
-     * Upload multiple photos to Cloudinary under the dpickitup folder.
+     * Upload multiple photos to Cloudinary under the pickitup_verification/{carrier_id} folder.
      * Expects multipart/form-data with field name "photos" (up to 10 files).
      * Returns an array of secure URLs.
      */
     async uploadPhotos(req, res) {
         try {
+            const userId = req.user?.id;
+            if (!userId) {
+                return res.status(401).json({ error: 'Unauthorized' });
+            }
+            // Determine carrier ID for folder path as requested
+            const carrier = await db_1.default.carrier.findUnique({
+                where: { userId }
+            });
+            // Use specific folder name as requested for carrier documents
+            const targetFolder = carrier
+                ? `carrier id proof/${carrier.id}`
+                : cloudinary_1.CLOUDINARY_FOLDER;
             if (!req.files || !Array.isArray(req.files) || req.files.length === 0) {
                 return res.status(400).json({ error: 'No files uploaded' });
             }
             const uploadPromises = req.files.map((file) => {
                 return new Promise((resolve, reject) => {
                     const stream = cloudinary_1.default.uploader.upload_stream({
-                        folder: cloudinary_1.CLOUDINARY_FOLDER,
+                        folder: targetFolder,
                         resource_type: 'image',
                         transformation: [
                             { quality: 'auto', fetch_format: 'auto' },
@@ -63,7 +79,7 @@ class UploadController {
                 });
             });
             const urls = await Promise.all(uploadPromises);
-            console.log(`[Upload] ${urls.length} photo(s) uploaded to Cloudinary/${cloudinary_1.CLOUDINARY_FOLDER} by user ${req.user?.id}`);
+            console.log(`[Upload] ${urls.length} photo(s) uploaded to Cloudinary/${targetFolder} by user ${userId} (${req.user?.role})`);
             res.status(200).json({ urls });
         }
         catch (error) {

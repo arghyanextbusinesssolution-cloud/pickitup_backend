@@ -7,12 +7,16 @@ exports.shipmentRepository = exports.ShipmentRepository = void 0;
 const db_1 = __importDefault(require("../../config/db"));
 class ShipmentRepository {
     async create(data, ownerId) {
+        const { photoUrls, ...rest } = data;
         return db_1.default.shipment.create({
             data: {
-                ...data,
+                ...rest,
                 ownerId,
                 pickupDate: data.pickupDate ? new Date(data.pickupDate) : undefined,
                 deliveryDate: data.deliveryDate ? new Date(data.deliveryDate) : undefined,
+                images: photoUrls && photoUrls.length > 0 ? {
+                    create: photoUrls.map(url => ({ imageUrl: url }))
+                } : undefined
             }
         });
     }
@@ -96,7 +100,11 @@ class ShipmentRepository {
             },
             include: {
                 owner: true,
-                booking: true
+                booking: {
+                    include: {
+                        claims: true
+                    }
+                }
             },
             orderBy: { updatedAt: 'desc' }
         });
@@ -111,7 +119,11 @@ class ShipmentRepository {
                         carrier: true
                     }
                 },
-                booking: true,
+                booking: {
+                    include: {
+                        claims: true
+                    }
+                },
                 items: true,
                 images: true,
                 stops: true,
@@ -120,11 +132,18 @@ class ShipmentRepository {
         });
     }
     async update(id, data) {
-        const updateData = { ...data };
+        const { photoUrls, ...rest } = data;
+        const updateData = { ...rest };
         if (data.pickupDate)
             updateData.pickupDate = new Date(data.pickupDate);
         if (data.deliveryDate)
             updateData.deliveryDate = new Date(data.deliveryDate);
+        if (photoUrls && photoUrls.length > 0) {
+            updateData.images = {
+                deleteMany: {},
+                create: photoUrls.map(url => ({ imageUrl: url }))
+            };
+        }
         return db_1.default.shipment.update({
             where: { id },
             data: updateData

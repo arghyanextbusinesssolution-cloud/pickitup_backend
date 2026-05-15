@@ -22,6 +22,15 @@ class BidRepository {
             include: { carrier: true, shipment: true }
         });
     }
+    async findAll() {
+        return db_1.default.bid.findMany({
+            include: {
+                carrier: { include: { user: true } },
+                shipment: { include: { owner: true } }
+            },
+            orderBy: { createdAt: 'desc' }
+        });
+    }
     async findManyByShipment(shipmentId) {
         return db_1.default.bid.findMany({
             where: { shipmentId },

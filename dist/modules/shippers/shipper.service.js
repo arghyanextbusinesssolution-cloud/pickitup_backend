@@ -8,34 +8,21 @@ const db_1 = __importDefault(require("../../config/db"));
 class ShipperService {
     async getPaymentStats(ownerId) {
         const [totalSpent, inEscrow, totalShipments, completedCount, recentPayments] = await Promise.all([
-            // Total Spent (Completed Bookings)
             db_1.default.booking.aggregate({
                 _sum: { price: true },
                 where: { shipment: { ownerId }, status: 'COMPLETED' }
             }),
-            // In Escrow (Confirmed or In Transit)
             db_1.default.booking.aggregate({
                 _sum: { price: true },
                 where: { shipment: { ownerId }, status: { in: ['CONFIRMED', 'IN_TRANSIT'] } }
             }),
-            // Total Shipments
-            db_1.default.shipment.count({
-                where: { ownerId }
-            }),
-            // Completed Shipments
-            db_1.default.shipment.count({
-                where: { ownerId, status: 'DELIVERED' }
-            }),
-            // Recent Payments/Bookings
+            db_1.default.shipment.count({ where: { ownerId } }),
+            db_1.default.shipment.count({ where: { ownerId, status: 'DELIVERED' } }),
             db_1.default.booking.findMany({
                 where: { shipment: { ownerId } },
                 take: 10,
                 orderBy: { createdAt: 'desc' },
-                include: {
-                    shipment: {
-                        select: { title: true, id: true }
-                    }
-                }
+                include: { shipment: { select: { title: true, id: true } } }
             })
         ]);
         return {
@@ -52,6 +39,31 @@ class ShipperService {
                 createdAt: p.createdAt
             }))
         };
+    }
+    async updatePhone(userId, phone) {
+        return db_1.default.user.update({
+            where: { id: userId },
+            data: { phone },
+            select: { id: true, email: true, phone: true }
+        });
+    }
+    async addAddress(userId, data) {
+        // Mark user as verified once address is submitted (all steps complete)
+        await db_1.default.user.update({
+            where: { id: userId },
+            data: { isVerified: true }
+        });
+        return db_1.default.userAddress.create({
+            data: {
+                userId,
+                addressLine1: data.addressLine1,
+                addressLine2: undefined,
+                city: data.city,
+                state: data.state,
+                country: data.country,
+                postalCode: data.postalCode,
+            }
+        });
     }
 }
 exports.ShipperService = ShipperService;

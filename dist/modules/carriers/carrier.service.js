@@ -79,5 +79,30 @@ class CarrierService {
             }))
         };
     }
+    async updateIdentity(carrierId, data) {
+        return db_1.default.carrier.update({
+            where: { id: carrierId },
+            data: {
+                governmentIdType: data.idType,
+                idFrontUrl: data.idFrontUrl,
+                idBackUrl: data.idBackUrl,
+                selfieUrl: data.selfieUrl
+            }
+        });
+    }
+    async addVehicle(carrierId, data) {
+        return db_1.default.carrierVehicle.create({
+            data: {
+                carrierId,
+                vehicleType: data.vehicleType,
+                vehicleBrand: data.vehicleBrand,
+                vehicleModel: data.vehicleModel,
+                plateNumber: data.plateNumber,
+                loadCapacity: parseFloat(data.loadCapacity),
+                registrationDocUrl: data.registrationDocUrl,
+                insuranceDocUrl: data.insuranceDocUrl
+            }
+        });
+    }
 }
 exports.CarrierService = CarrierService;

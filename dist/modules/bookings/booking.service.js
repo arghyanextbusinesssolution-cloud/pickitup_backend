@@ -25,6 +25,9 @@ class BookingService {
             return booking_repository_1.bookingRepository.findManyByOwner(userId);
         }
     }
+    async findAll() {
+        return booking_repository_1.bookingRepository.findAll();
+    }
     async verifyPickupOtp(bookingId, otp, photos = []) {
         const booking = await booking_repository_1.bookingRepository.findById(bookingId);
         if (!booking)

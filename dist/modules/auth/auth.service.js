@@ -8,6 +8,7 @@ const bcryptjs_1 = __importDefault(require("bcryptjs"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const auth_repository_1 = require("./auth.repository");
 const env_1 = require("../../config/env");
+const otp_service_1 = require("./otp.service");
 class AuthService {
     async register(data) {
         const hashedPassword = await bcryptjs_1.default.hash(data.password, 10);
@@ -24,6 +25,12 @@ class AuthService {
             throw new Error('Invalid credentials');
         }
         return this.generateToken(user);
+    }
+    async sendEmailOtp(email, name) {
+        return otp_service_1.otpService.sendEmailOtp(email, name);
+    }
+    async verifyEmailOtp(email, code) {
+        return otp_service_1.otpService.verifyOtp(email, code);
     }
     generateToken(user) {
         const secret = env_1.env.JWT_SECRET;

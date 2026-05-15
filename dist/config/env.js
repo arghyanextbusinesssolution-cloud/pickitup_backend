@@ -26,6 +26,11 @@ const envSchema = zod_1.z.object({
     CLOUDINARY_API_KEY: zod_1.z.string(),
     CLOUDINARY_API_SECRET: zod_1.z.string(),
     CLOUDINARY_FOLDER: zod_1.z.string().default('dpickitup'),
+    // EmailJS
+    EMAILJS_SERVICE_ID: zod_1.z.string(),
+    EMAILJS_TEMPLATE_ID: zod_1.z.string(),
+    EMAILJS_PUBLIC_KEY: zod_1.z.string(),
+    EMAILJS_PRIVATE_KEY: zod_1.z.string(),
 });
 const _env = envSchema.safeParse(process.env);
 if (!_env.success) {

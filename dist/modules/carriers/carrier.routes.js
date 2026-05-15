@@ -10,4 +10,6 @@ router.get('/profile', carrier_controller_1.carrierController.getProfile);
 router.post('/bid', carrier_controller_1.carrierController.placeBid);
 router.get('/bids', carrier_controller_1.carrierController.getMyBids);
 router.get('/earnings/stats', carrier_controller_1.carrierController.getEarningsStats);
+router.patch('/onboarding/identity', carrier_controller_1.carrierController.updateIdentity);
+router.post('/onboarding/vehicle', carrier_controller_1.carrierController.addVehicle);
 exports.default = router;

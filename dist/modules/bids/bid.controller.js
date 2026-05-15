@@ -79,6 +79,15 @@ class BidController {
             res.status(500).json({ error: error.message });
         }
     }
+    async getAll(req, res) {
+        try {
+            const result = await bidService.findAll();
+            res.status(200).json(result);
+        }
+        catch (error) {
+            res.status(500).json({ error: error.message });
+        }
+    }
 }
 exports.BidController = BidController;
 exports.bidController = new BidController();

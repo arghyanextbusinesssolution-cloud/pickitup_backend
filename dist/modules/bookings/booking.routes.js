@@ -6,6 +6,7 @@ const auth_middleware_1 = require("../../middlewares/auth.middleware");
 const router = (0, express_1.Router)();
 router.use(auth_middleware_1.authMiddleware);
 router.post('/', booking_controller_1.bookingController.create);
+router.get('/', (0, auth_middleware_1.roleMiddleware)(['ADMIN']), booking_controller_1.bookingController.getAll);
 router.get('/my', booking_controller_1.bookingController.getMyBookings);
 router.get('/:id', booking_controller_1.bookingController.getById);
 router.post('/:id/verify-pickup', booking_controller_1.bookingController.verifyPickupOtp);
