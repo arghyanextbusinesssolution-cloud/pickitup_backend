@@ -7,11 +7,17 @@ model CarrierVehicle {
   carrierId      String
   carrier        Carrier  @relation(fields: [carrierId], references: [id], onDelete: Cascade)
   vehicleType    String
-  capacityWeight Float?
-  capacityVolume Float?
+  vehicleBrand   String?
+  vehicleModel   String?
   plateNumber    String   @unique 
+  loadCapacity   Float?
+  
+  // Documents
+  registrationDocUrl String?
+  insuranceDocUrl    String?
 
   vehicleInfo    VehicleType? @relation(fields: [vehicleType], references: [name])
+
 
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt

@@ -400,6 +400,12 @@ model CarrierAvailability {
   @@index([carrierId])
 }
 
+enum GovernmentIdType {
+  PASSPORT
+  DRIVING_LICENSE
+  NATIONAL_ID
+}
+
 enum VerificationStatus {
   PENDING
   APPROVED
@@ -1205,6 +1211,9 @@ model User {
   phone        String?   @unique
   role         Role      @default(SHIPPER)
   isVerified   Boolean   @default(false)
+  industry     String?
+  tier         String?   @default("BRONZE")
+
 
   // Security Hardening
   failedLoginAttempts Int      @default(0)
@@ -1286,6 +1295,7 @@ model CarrierVehicle {
 
   vehicleInfo    VehicleType? @relation(fields: [vehicleType], references: [name])
 
+
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
   deletedAt      DateTime?
@@ -1302,10 +1312,4 @@ model VehicleType {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   deletedAt   DateTime?
-}
-
-enum GovernmentIdType {
-  PASSPORT
-  DRIVING_LICENSE
-  NATIONAL_ID
 }

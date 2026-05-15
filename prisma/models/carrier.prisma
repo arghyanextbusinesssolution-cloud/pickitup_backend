@@ -13,6 +13,17 @@ model Carrier {
   
   isVerified   Boolean   @default(false)
   
+  // Identity Verification
+  governmentIdType   GovernmentIdType?
+  idFrontUrl         String?
+  idBackUrl          String?
+  selfieUrl          String?
+
+  // Bank Details (Deferred but adding fields for future)
+  bankName           String?
+  accountName        String?
+  accountNumber      String?
+  
   deletedAt    DateTime? 
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
@@ -93,6 +104,12 @@ model CarrierAvailability {
   deletedAt   DateTime?
 
   @@index([carrierId])
+}
+
+enum GovernmentIdType {
+  PASSPORT
+  DRIVING_LICENSE
+  NATIONAL_ID
 }
 
 enum VerificationStatus {
