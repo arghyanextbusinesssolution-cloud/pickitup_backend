@@ -23,8 +23,9 @@ const app = express();
 
 // Middlewares
 app.use(helmet());
+const frontendUrls = process.env.FRONTEND_URL ? process.env.FRONTEND_URL.split(',').map(url => url.trim()) : [];
 const allowedOrigins = [
-    process.env.FRONTEND_URL,
+    ...frontendUrls,
     'http://localhost:3000'
 ].filter(Boolean) as string[];
 
