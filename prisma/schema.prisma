@@ -230,7 +230,7 @@ model BlogPost {
   content     String   @db.Text
   excerpt     String?  @db.Text
   coverImage  String?
-  published   Boolean  @default(false)
+  published   Boolean  @default(true)
   authorId    String
   author      User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
   
