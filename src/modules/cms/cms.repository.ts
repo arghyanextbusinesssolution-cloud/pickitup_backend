@@ -14,7 +14,7 @@ export class CMSRepository {
 
     // Blog Methods
     async createBlogPost(data: CreateBlogDto & { slug: string; authorId: string }) {
-        return (prisma as any).blogPost.create({
+        return prisma.blogPost.create({
             data,
             include: {
                 author: {
@@ -29,7 +29,7 @@ export class CMSRepository {
     }
 
     async getBlogPosts(publishedOnly = true) {
-        return (prisma as any).blogPost.findMany({
+        return prisma.blogPost.findMany({
             where: publishedOnly ? { published: true } : {},
             include: {
                 author: {
@@ -47,7 +47,7 @@ export class CMSRepository {
     }
 
     async getBlogPostBySlug(slug: string) {
-        return (prisma as any).blogPost.findUnique({
+        return prisma.blogPost.findUnique({
             where: { slug },
             include: {
                 author: {
@@ -62,7 +62,7 @@ export class CMSRepository {
     }
 
     async getBlogPostById(id: string) {
-        return (prisma as any).blogPost.findUnique({
+        return prisma.blogPost.findUnique({
             where: { id },
             include: {
                 author: {
@@ -77,7 +77,7 @@ export class CMSRepository {
     }
 
     async updateBlogPost(id: string, data: UpdateBlogDto & { slug?: string }) {
-        return (prisma as any).blogPost.update({
+        return prisma.blogPost.update({
             where: { id },
             data,
             include: {
@@ -93,7 +93,7 @@ export class CMSRepository {
     }
 
     async deleteBlogPost(id: string) {
-        return (prisma as any).blogPost.delete({
+        return prisma.blogPost.delete({
             where: { id }
         });
     }

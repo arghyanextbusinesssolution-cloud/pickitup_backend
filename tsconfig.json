@@ -6,7 +6,6 @@
       "es2020"
     ],
     "outDir": "./dist",
-    "rootDir": "./src",
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
@@ -19,7 +18,8 @@
     }
   },
   "include": [
-    "src/**/*"
+    "src/**/*",
+    "prisma/**/*"
   ],
   "exclude": [
     "node_modules",
