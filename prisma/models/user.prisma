@@ -44,6 +44,7 @@ model User {
   activityLogs    ActivityLog[]
   adminActions    AdminAction[]
   uploadedFiles   FileUpload[]
+  blogPosts       BlogPost[]
 
   @@index([email])
   @@index([role])
