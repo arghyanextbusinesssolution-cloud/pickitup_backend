@@ -23,7 +23,10 @@ const upload = multer({
 
 router.use(authMiddleware);
 
-// POST /api/uploads/photos — Upload up to 10 images
+// POST /api/uploads/photos — Upload up to 10 images (carrier docs)
 router.post('/photos', upload.array('photos', 10), uploadController.uploadPhotos);
+
+// POST /api/uploads/blog-image — Upload a single blog cover image to Cloudinary/blog
+router.post('/blog-image', upload.single('image'), uploadController.uploadBlogImage);
 
 export default router;

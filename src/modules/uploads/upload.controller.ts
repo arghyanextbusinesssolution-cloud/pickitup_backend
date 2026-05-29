@@ -22,7 +22,7 @@ export class UploadController {
             });
 
             // Use specific folder name as requested for carrier documents
-            const targetFolder = carrier 
+            const targetFolder = carrier
                 ? `carrier id proof/${carrier.id}`
                 : CLOUDINARY_FOLDER;
 
@@ -57,6 +57,48 @@ export class UploadController {
         } catch (error: any) {
             console.error('[Upload] Cloudinary upload failed:', error);
             res.status(500).json({ error: 'Failed to upload photos' });
+        }
+    }
+    /**
+     * Upload a single blog cover image to Cloudinary under the 'blog' folder.
+     * Expects multipart/form-data with field name "image".
+     * Returns { url: string }
+     */
+    async uploadBlogImage(req: AuthRequest, res: Response) {
+        try {
+            const userId = req.user?.id;
+            if (!userId) {
+                return res.status(401).json({ error: 'Unauthorized' });
+            }
+
+            const file = req.file;
+            if (!file) {
+                return res.status(400).json({ error: 'No file uploaded' });
+            }
+
+            const url = await new Promise<string>((resolve, reject) => {
+                const stream = cloudinary.uploader.upload_stream(
+                    {
+                        folder: 'blog',
+                        resource_type: 'image',
+                        transformation: [
+                            { quality: 'auto', fetch_format: 'auto' },
+                            { width: 1200, crop: 'limit' }
+                        ],
+                    },
+                    (error, result) => {
+                        if (error) return reject(error);
+                        resolve(result!.secure_url);
+                    }
+                );
+                stream.end(file.buffer);
+            });
+
+            console.log(`[Upload] Blog image uploaded to Cloudinary/blog by user ${userId}`);
+            res.status(200).json({ url });
+        } catch (error: any) {
+            console.error('[Upload] Blog image upload failed:', error);
+            res.status(500).json({ error: 'Failed to upload blog image' });
         }
     }
 }

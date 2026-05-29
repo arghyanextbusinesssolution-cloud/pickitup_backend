@@ -13,6 +13,9 @@
     "db:admin": "node scripts/create-admin.js",
     "render-build": "npm install && npm run prisma:generate && npm run build"
   },
+  "prisma": {
+    "seed": "ts-node prisma/seed.ts"
+  },
   "keywords": [],
   "author": "",
   "license": "ISC",

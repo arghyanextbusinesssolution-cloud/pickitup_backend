@@ -1244,6 +1244,7 @@ model User {
   activityLogs    ActivityLog[]
   adminActions    AdminAction[]
   uploadedFiles   FileUpload[]
+  blogPosts       BlogPost[]
 
   @@index([email])
   @@index([role])
@@ -1312,4 +1313,28 @@ model VehicleType {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   deletedAt   DateTime?
+}
+
+// =====================
+// 20. CMS & BLOGS
+// =====================
+
+model BlogPost {
+  id          String   @id @default(cuid())
+  title       String
+  slug        String   @unique
+  content     String   @db.Text
+  excerpt     String?  @db.Text
+  coverImage  String?
+  published   Boolean  @default(false)
+  authorId    String
+  author      User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  deletedAt   DateTime?
+
+  @@index([slug])
+  @@index([authorId])
+  @@index([createdAt])
 }

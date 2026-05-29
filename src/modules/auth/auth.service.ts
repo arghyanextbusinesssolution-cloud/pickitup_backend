@@ -15,14 +15,25 @@ export class AuthService {
             const companyName = data.companyName || `${data.firstName || 'Carrier'} Transport`;
             await authRepository.createCarrier(companyName, user.id);
         }
-        
+
         return this.generateToken(user);
     }
 
     async login(data: LoginDto) {
+        console.log(`[AuthService] Login attempt for email: ${data.email}`);
         const user = await authRepository.findByEmail(data.email);
 
-        if (!user || !(await bcrypt.compare(data.password, user.passwordHash))) {
+        if (!user) {
+            console.log(`[AuthService] Login failed: User not found for email: ${data.email}`);
+            throw new Error('Invalid credentials');
+        }
+
+        console.log(`[AuthService] User found: ${user.firstName} ${user.lastName}, Role: ${user.role}`);
+
+        const isPasswordValid = await bcrypt.compare(data.password, user.passwordHash);
+        console.log(`[AuthService] Password validation: ${isPasswordValid ? 'SUCCESS' : 'FAILED'}`);
+
+        if (!isPasswordValid) {
             throw new Error('Invalid credentials');
         }
 
@@ -39,12 +50,12 @@ export class AuthService {
 
     private generateToken(user: any) {
         const secret = env.JWT_SECRET;
-        const payload = { 
-            id: user.id, 
-            email: user.email, 
+        const payload = {
+            id: user.id,
+            email: user.email,
             firstName: user.firstName,
             lastName: user.lastName,
-            role: user.role 
+            role: user.role
         };
         const token = jwt.sign(payload, secret, { expiresIn: '1d' });
         return { token, user: payload };
