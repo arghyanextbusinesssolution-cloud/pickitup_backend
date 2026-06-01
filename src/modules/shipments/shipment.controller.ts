@@ -9,10 +9,10 @@ export class ShipmentController {
     async create(req: AuthRequest, res: Response) {
         try {
             console.log("[Shipment Controller] Validate creation for:", req.user!.email);
-            
+
             // Validate input
             const validatedData = CreateShipmentSchema.parse(req.body);
-            
+
             const result = await shipmentService.create(validatedData, req.user!.id);
             res.status(201).json(result);
         } catch (error: any) {
@@ -36,7 +36,11 @@ export class ShipmentController {
 
     async getAvailableShipments(req: AuthRequest, res: Response) {
         try {
-            const { startDate, endDate, maxDistance, minBids, lat, lng, radius } = req.query;
+            const {
+                startDate, endDate, maxDistance, minBids, lat, lng, radius,
+                minWeight, maxWeight, weightUnit,
+                minBudget, maxBudget, category, subcategory
+            } = req.query;
             const filters = {
                 startDate: startDate ? new Date(startDate as string) : undefined,
                 endDate: endDate ? new Date(endDate as string) : undefined,
@@ -45,6 +49,13 @@ export class ShipmentController {
                 lat: lat ? Number(lat) : undefined,
                 lng: lng ? Number(lng) : undefined,
                 radius: radius ? Number(radius) : undefined,
+                minWeight: minWeight ? Number(minWeight) : undefined,
+                maxWeight: maxWeight ? Number(maxWeight) : undefined,
+                weightUnit: weightUnit as string,
+                minBudget: minBudget ? Number(minBudget) : undefined,
+                maxBudget: maxBudget ? Number(maxBudget) : undefined,
+                category: category as string,
+                subcategory: subcategory as string,
             };
 
             const result = await shipmentService.findAvailable(filters);

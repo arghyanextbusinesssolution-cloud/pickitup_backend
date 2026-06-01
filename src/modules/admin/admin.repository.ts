@@ -9,7 +9,7 @@ export class AdminRepository {
                 status: { in: ['ASSIGNED', 'IN_TRANSIT'] }
             }
         });
-        
+
         // Sum of all paid payments as Gross Revenue
         const grossRevenue = await prisma.payment.aggregate({
             where: { status: 'PAID' },
@@ -17,13 +17,13 @@ export class AdminRepository {
         });
         const payoutSum = grossRevenue._sum.amount || 0;
 
-        return { 
-            userCount, 
-            carrierCount, 
-            activeShipmentCount, 
-            payoutSum: Number(payoutSum), 
-            shipmentCount: await prisma.shipment.count(), 
-            bookingCount: await prisma.booking.count() 
+        return {
+            userCount,
+            carrierCount,
+            activeShipmentCount,
+            payoutSum: Number(payoutSum),
+            shipmentCount: await prisma.shipment.count(),
+            bookingCount: await prisma.booking.count()
         };
     }
 
@@ -51,7 +51,7 @@ export class AdminRepository {
             const m = (currentMonth - i + 12) % 12;
             const monthName = months[m];
             const year = new Date().getFullYear() - (currentMonth - i < 0 ? 1 : 0);
-            
+
             const monthShipments = shipments.filter(s => {
                 const d = new Date(s.createdAt);
                 return d.getMonth() === m && d.getFullYear() === year;
@@ -356,7 +356,7 @@ export class AdminRepository {
             carrierName: s.booking?.carrier ? `${s.booking.carrier.user.firstName} ${s.booking.carrier.user.lastName}` : 'Unassigned',
             currentLocation: s.booking?.tracking?.[0]?.notes || 'Awaiting update',
             lastUpdated: s.booking?.tracking?.[0]?.createdAt || s.createdAt,
-            distance: s.distanceKm,
+            distance: s.distanceMiles,
             price: Number(s.finalPrice || s.budgetMax || 0)
         }));
     }
@@ -378,7 +378,7 @@ export class AdminRepository {
         if (shipments.length === 0) return null;
 
         const shipment = shipments[Math.floor(Math.random() * shipments.length)];
-        
+
         const cityToHub: Record<string, string> = {
             'New York': 'NYC', 'Los Angeles': 'LAX', 'Chicago': 'CHI',
             'London': 'LDN', 'Amsterdam': 'AMS', 'Frankfurt': 'FRA',

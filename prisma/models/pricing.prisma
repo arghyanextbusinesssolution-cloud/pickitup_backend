@@ -7,7 +7,7 @@ model PricingRule {
   name        String   @unique
   
   basePrice   Decimal  @db.Decimal(12, 2)
-  pricePerKm  Decimal  @db.Decimal(12, 2)
+  pricePerMile Decimal  @db.Decimal(12, 2)
   pricePerKg  Decimal  @db.Decimal(12, 2)
   
   minWeight   Float?

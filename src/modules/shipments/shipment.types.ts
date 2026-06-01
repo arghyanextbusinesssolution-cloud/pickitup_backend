@@ -16,7 +16,7 @@ export const CATEGORY_SUBCATEGORIES: Record<string, string[]> = {
 const shipmentBaseSchema = z.object({
     title: z.string().min(3),
     description: z.string().optional(),
-    
+
     // Origin
     originAddress: z.string(),
     originLatitude: z.number().optional(),
@@ -38,15 +38,15 @@ const shipmentBaseSchema = z.object({
     destinationPostalCode: z.string().optional(),
 
     // Logistics
-    distanceKm: z.number().optional(),
+    distanceMiles: z.number().optional(),
     estimatedTimeMin: z.number().optional(),
-    
+
     category: z.string().optional(),
     subcategory: z.string().optional(),
     photoUrls: z.array(z.string()).optional().default([]),
     weight: z.number().optional(),
     weightUnit: z.string().default('kg'),
-    
+
     length: z.number().optional(),
     width: z.number().optional(),
     height: z.number().optional(),
@@ -70,7 +70,7 @@ const shipmentBaseSchema = z.object({
     hasElevatorDelivery: z.boolean().optional(),
     pickupFloor: z.number().optional(),
     deliveryFloor: z.number().optional(),
-    
+
     specialRequirements: z.string().optional(),
     isPalletized: z.boolean().default(false),
     isCrated: z.boolean().default(false),

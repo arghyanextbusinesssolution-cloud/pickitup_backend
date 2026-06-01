@@ -14,7 +14,7 @@ export class PaymentService {
     async createCheckoutSession(bookingId: string, userId: string, useInsurance: boolean = false) {
         const booking = await bookingRepository.findById(bookingId);
         if (!booking) throw new Error('Booking not found');
-        
+
         // Ensure the requester is the shipment owner (shipper)
         if (booking.shipment.ownerId !== userId) {
             throw new Error('Not authorized to pay for this booking');
@@ -27,7 +27,7 @@ export class PaymentService {
         try {
             const amount = Number(booking.price);
             const platformFee = Math.round(amount * 0.03 * 100) / 100; // 3% fee
-            const insuranceFee = useInsurance ? 100 : 0;
+            const insuranceFee = useInsurance ? Math.round(amount * 0.10 * 100) / 100 : 0; // 10% fee
             const totalAmount = amount + platformFee + insuranceFee;
 
             if (useInsurance) {
@@ -161,7 +161,7 @@ export class PaymentService {
             // Update booking status
             await tx.booking.update({
                 where: { id: bookingId },
-                data: { 
+                data: {
                     paymentStatus: PaymentStatus.PAID,
                 }
             });

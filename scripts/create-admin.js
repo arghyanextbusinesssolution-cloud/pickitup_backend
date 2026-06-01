@@ -5,7 +5,7 @@ require('dotenv').config();
 const prisma = new PrismaClient();
 
 async function createAdmin() {
-  const email = process.argv[2] || 'admin@uship.com';
+  const email = process.argv[2] || 'admin@pickitup.com';
   const password = process.argv[3] || 'Admin@123';
   const firstName = 'System';
   const lastName = 'Admin';

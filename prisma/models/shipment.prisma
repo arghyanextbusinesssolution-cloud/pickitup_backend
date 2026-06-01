@@ -41,7 +41,7 @@ model Shipment {
   // =====================
   // 🚚 DISTANCE (KEEP)
   // =====================
-  distanceKm           Float?
+  distanceMiles        Float?
   estimatedTimeMin     Int?
 
   // =====================
