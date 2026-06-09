@@ -1,6 +1,6 @@
-# uShip Backend
+# PickItUp Backend API Reference
 
-This is the backend service for the uShip marketplace, a platform connecting shippers with carriers.
+This is the backend service for the PickItUp marketplace, a platform connecting shippers with carriers.
 
 ## Tech Stack
 - **Framework**: Express.js

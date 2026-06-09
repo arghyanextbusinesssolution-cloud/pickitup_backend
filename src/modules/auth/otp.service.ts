@@ -3,9 +3,9 @@ import prisma from '../../config/db';
 import { env } from '../../config/env';
 
 export class OtpService {
-    private readonly serviceId  = env.EMAILJS_SERVICE_ID;
+    private readonly serviceId = env.EMAILJS_SERVICE_ID;
     private readonly templateId = env.EMAILJS_TEMPLATE_ID;
-    private readonly publicKey  = env.EMAILJS_PUBLIC_KEY;
+    private readonly publicKey = env.EMAILJS_PUBLIC_KEY;
     private readonly privateKey = env.EMAILJS_PRIVATE_KEY;
 
     async sendEmailOtp(email: string, name: string) {
@@ -33,10 +33,10 @@ export class OtpService {
                 accessToken: this.privateKey,
                 template_params: {
                     name,
-                    app_name: 'uShip',
+                    app_name: 'PickItUp',
                     otp_code: otpCode,
                     expiry_minutes: expiryMinutes.toString(),
-                    support_email: 'support@uship.com',
+                    support_email: 'support@pickitup.com',
                     to_email: email,
                     email: email
                 }
