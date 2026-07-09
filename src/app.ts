@@ -18,6 +18,7 @@ import { claimRoutes } from './modules/claims';
 import { cmsRoutes } from './modules/cms';
 import shipperRoutes from './modules/shippers/shipper.routes';
 import { uploadRoutes } from './modules/uploads';
+import { enquiryRoutes } from './modules/enquiry';
 
 const app = express();
 
@@ -56,6 +57,7 @@ app.use('/api/claims', claimRoutes);
 app.use('/api/cms', cmsRoutes);
 app.use('/api/shippers', shipperRoutes);
 app.use('/api/uploads', uploadRoutes);
+app.use('/api/enquiries', enquiryRoutes);
 
 // Health check
 app.get('/health', (req, res) => {
