@@ -22,34 +22,6 @@ model SystemSetting {
   createdAt DateTime @default(now())
 }
 
-// =====================
-// 21. CONTACT ENQUIRIES
-// =====================
-
-model ContactEnquiry {
-  id          String              @id @default(cuid())
-  name        String
-  email       String
-  inquiryType String              @default("General Support")
-  message     String              @db.Text
-  status      ContactEnquiryStatus @default(NEW)
-
-  createdAt   DateTime            @default(now())
-  updatedAt   DateTime            @updatedAt
-  deletedAt   DateTime?
-
-  @@index([status])
-  @@index([createdAt])
-  @@index([email])
-}
-
-enum ContactEnquiryStatus {
-  NEW
-  IN_PROGRESS
-  RESOLVED
-}
-
-
 model PlatformCommission {
   id        String   @id @default(cuid())
   bookingId String
@@ -554,6 +526,28 @@ model FileUpload {
 
   @@index([uploadedById])
   @@index([refTable, refId])
+}
+
+enum ContactEnquiryStatus {
+  NEW
+  IN_PROGRESS
+  RESOLVED
+}
+
+model ContactEnquiry {
+  id          String               @id @default(cuid())
+  name        String
+  email       String
+  inquiryType String               @default("General Support")
+  message     String
+  status      ContactEnquiryStatus @default(NEW)
+  createdAt   DateTime             @default(now())
+  updatedAt   DateTime             @updatedAt
+  deletedAt   DateTime?
+
+  @@index([status])
+  @@index([createdAt])
+  @@index([email])
 }
 
 // =====================
